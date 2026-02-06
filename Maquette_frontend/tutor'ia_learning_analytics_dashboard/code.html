@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tutor'IA Learning Analytics Dashboard</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "primary-dark": "#0f4bc4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-dark": "#1b2434",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        /* Custom scrollbar for dark mode feels */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101622; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232f48; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #135bec; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden flex h-screen w-full">
+<!-- Sidebar -->
+<aside class="w-64 h-full flex flex-col justify-between bg-surface-dark border-r border-slate-800 shrink-0">
+<div class="flex flex-col gap-6 p-6">
+<!-- User/Brand Area -->
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-12 shadow-lg shadow-primary/20" data-alt="User profile picture showing a smiling young student" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDA9AMtOfNlyWIpn4DQ3uXO9kp5osr6Pa9kANCKsIqQ7JjwnIoJ_gWFz556oV2IA2HuUKoMy1AKxfK7BAACps3GxaZ-UvCzsvZFhGM-VKuwapIlYdQs1yWMYYlmfHzFcKD-Hi-HxMGaNcEqpSo5v6x7LtWcqoPWx_K6TxN__RKd0BP4D2-M-zxTVuoOXfu2FhTixC50H0KplFKBFq8FHPxUPYxQluGOvVQdlAN9tglqU9-9c_5zLZpi3ynmPlvvyfnHgmEA5dFH6Sc");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-lg font-bold leading-tight">Tutor'IA</h1>
+<p class="text-primary text-xs font-medium tracking-wider uppercase">Premium</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white shadow-lg shadow-primary/25 transition-transform hover:scale-[1.02]" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-semibold">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="text-sm font-medium">Chat</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">style</span>
+<span class="text-sm font-medium">Flashcards</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">local_library</span>
+<span class="text-sm font-medium">Library</span>
+</a>
+</nav>
+</div>
+<!-- Bottom Actions -->
+<div class="p-6 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<div class="mt-2 pt-4 border-t border-slate-800">
+<a class="flex items-center gap-3 px-4 py-2 text-red-400 hover:text-red-300 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="text-xs font-medium">Sign Out</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 h-full overflow-y-auto relative">
+<!-- Header Section -->
+<header class="p-8 pb-0">
+<div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+<div class="flex flex-col gap-1">
+<h2 class="text-3xl md:text-4xl font-bold tracking-tight text-white">Welcome back, Alex</h2>
+<p class="text-slate-400 text-base">Here is your learning velocity for October.</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-dark border border-slate-700 text-sm text-white hover:bg-slate-800 transition">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span>Oct 2023</span>
+</button>
+<button class="p-2 rounded-full bg-surface-dark border border-slate-700 text-white hover:text-primary transition relative">
+<span class="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-background-dark"></span>
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</div>
+<!-- KPI Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<!-- Card 1 -->
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">schedule</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="p-2 rounded-lg bg-primary/20 text-primary">
+<span class="material-symbols-outlined">timer</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Total Study Time</p>
+</div>
+<div>
+<p class="text-3xl font-bold text-white mb-1">24h 30m</p>
+<div class="flex items-center gap-1 text-emerald-400 text-sm font-medium">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>+12%</span>
+<span class="text-slate-500 font-normal ml-1">vs last month</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-purple-500">school</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="p-2 rounded-lg bg-purple-500/20 text-purple-400">
+<span class="material-symbols-outlined">school</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Subjects Mastered</p>
+</div>
+<div>
+<p class="text-3xl font-bold text-white mb-1">12</p>
+<div class="flex items-center gap-1 text-emerald-400 text-sm font-medium">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+<span>+2</span>
+<span class="text-slate-500 font-normal ml-1">new subjects</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-orange-500">analytics</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="p-2 rounded-lg bg-orange-500/20 text-orange-400">
+<span class="material-symbols-outlined">target</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Avg. Success Rate</p>
+</div>
+<div>
+<p class="text-3xl font-bold text-white mb-1">88%</p>
+<div class="flex items-center gap-1 text-emerald-400 text-sm font-medium">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>+1.5%</span>
+<span class="text-slate-500 font-normal ml-1">improvement</span>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 flex flex-col gap-4 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-red-500">local_fire_department</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="p-2 rounded-lg bg-red-500/20 text-red-400">
+<span class="material-symbols-outlined">local_fire_department</span>
+</div>
+<p class="text-slate-400 text-sm font-medium">Current Streak</p>
+</div>
+<div>
+<p class="text-3xl font-bold text-white mb-1">14 Days</p>
+<div class="flex items-center gap-1 text-emerald-400 text-sm font-medium">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+<span>+1 Day</span>
+<span class="text-slate-500 font-normal ml-1">keep it up!</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Dashboard Content -->
+<div class="px-8 pb-8 flex flex-col xl:flex-row gap-6">
+<!-- Left Column: Main Chart & Review List (Takes more space) -->
+<div class="flex flex-col gap-6 flex-1">
+<!-- Main Chart Section -->
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="text-xl font-bold text-white">Progress over the Month</h3>
+<div class="flex items-center gap-2 mt-1">
+<p class="text-3xl font-bold text-white tracking-tight">1,240 XP</p>
+<span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">+15% vs Sep</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded-lg bg-slate-800 text-white text-xs font-medium hover:bg-primary transition">Weekly</button>
+<button class="px-3 py-1 rounded-lg bg-transparent text-slate-400 text-xs font-medium hover:text-white transition">Monthly</button>
+</div>
+</div>
+<!-- Chart Area -->
+<div class="w-full h-[280px] relative">
+<!-- SVG Chart -->
+<svg class="w-full h-full" data-alt="Area chart showing learning progress increasing over time with peaks and valleys" fill="none" preserveaspectratio="none" viewbox="0 0 478 150" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<lineargradient gradientunits="userSpaceOnUse" id="chartGradient" x1="236" x2="236" y1="0" y2="150">
+<stop stop-color="#135bec" stop-opacity="0.4"></stop>
+<stop offset="1" stop-color="#135bec" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Grid lines -->
+<line stroke="#334155" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="478" y1="149" y2="149"></line>
+<line opacity="0.5" stroke="#334155" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="478" y1="100" y2="100"></line>
+<line opacity="0.5" stroke="#334155" stroke-dasharray="4 4" stroke-width="1" x1="0" x2="478" y1="50" y2="50"></line>
+<!-- Area Path -->
+<path d="M0 109C18.15 109 18.15 21 36.3 21C54.46 21 54.46 41 72.6 41C90.7 41 90.7 93 108.9 93C127 93 127 33 145.2 33C163.3 33 163.3 101 181.5 101C199.6 101 199.6 61 217.8 61C236 61 236 45 254.1 45C272.3 45 272.3 121 290.4 121C308.6 121 308.6 149 326.7 149C344.9 149 344.9 1 363 1C381.2 1 381.2 81 399.3 81C417.5 81 417.5 129 435.6 129C453.8 129 453.8 25 472 25V150H0V109Z" fill="url(#chartGradient)"></path>
+<!-- Stroke Path -->
+<path d="M0 109C18.15 109 18.15 21 36.3 21C54.46 21 54.46 41 72.6 41C90.7 41 90.7 93 108.9 93C127 93 127 33 145.2 33C163.3 33 163.3 101 181.5 101C199.6 101 199.6 61 217.8 61C236 61 236 45 254.1 45C272.3 45 272.3 121 290.4 121C308.6 121 308.6 149 326.7 149C344.9 149 344.9 1 363 1C381.2 1 381.2 81 399.3 81C417.5 81 417.5 129 435.6 129C453.8 129 453.8 25 472 25" stroke="#135bec" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+</svg>
+<!-- X-Axis Labels -->
+<div class="flex justify-between mt-2 px-2 text-xs text-slate-500 font-medium font-mono">
+<span>01</span>
+<span>05</span>
+<span>10</span>
+<span>15</span>
+<span>20</span>
+<span>25</span>
+<span>30</span>
+</div>
+</div>
+</div>
+<!-- Notions to Review Section -->
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 shadow-sm flex-1">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-bold text-white">Notions to Review</h3>
+<a class="text-primary text-sm font-semibold hover:text-primary-dark transition" href="#">View All</a>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Review Item 1 (Warning) -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-background-dark border border-slate-800 hover:border-slate-700 transition group cursor-pointer">
+<div class="flex items-center gap-4 flex-1">
+<div class="size-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+<span class="material-symbols-outlined">calculate</span>
+</div>
+<div>
+<h4 class="text-white font-semibold">Quadratic Equations</h4>
+<p class="text-slate-500 text-xs uppercase tracking-wider font-bold">Mathematics</p>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full sm:w-1/3">
+<div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-orange-500 rounded-full" style="width: 40%"></div>
+</div>
+<span class="text-orange-400 font-bold text-sm w-12 text-right">40%</span>
+</div>
+<div class="hidden sm:block">
+<button class="size-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-primary transition">
+<span class="material-symbols-outlined text-sm">arrow_forward_ios</span>
+</button>
+</div>
+</div>
+<!-- Review Item 2 (Neutral) -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-background-dark border border-slate-800 hover:border-slate-700 transition group cursor-pointer">
+<div class="flex items-center gap-4 flex-1">
+<div class="size-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 shrink-0">
+<span class="material-symbols-outlined">history_edu</span>
+</div>
+<div>
+<h4 class="text-white font-semibold">French Revolution</h4>
+<p class="text-slate-500 text-xs uppercase tracking-wider font-bold">History</p>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full sm:w-1/3">
+<div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-yellow-500 rounded-full" style="width: 65%"></div>
+</div>
+<span class="text-yellow-400 font-bold text-sm w-12 text-right">65%</span>
+</div>
+<div class="hidden sm:block">
+<button class="size-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-primary transition">
+<span class="material-symbols-outlined text-sm">arrow_forward_ios</span>
+</button>
+</div>
+</div>
+<!-- Review Item 3 (Good) -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-background-dark border border-slate-800 hover:border-slate-700 transition group cursor-pointer">
+<div class="flex items-center gap-4 flex-1">
+<div class="size-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+<span class="material-symbols-outlined">eco</span>
+</div>
+<div>
+<h4 class="text-white font-semibold">Photosynthesis</h4>
+<p class="text-slate-500 text-xs uppercase tracking-wider font-bold">Biology</p>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full sm:w-1/3">
+<div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 80%"></div>
+</div>
+<span class="text-emerald-400 font-bold text-sm w-12 text-right">80%</span>
+</div>
+<div class="hidden sm:block">
+<button class="size-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-primary transition">
+<span class="material-symbols-outlined text-sm">arrow_forward_ios</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Radar Chart & Suggestions (Takes less space) -->
+<div class="flex flex-col gap-6 xl:w-[360px] shrink-0">
+<!-- Radar Chart Card -->
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col items-center">
+<h3 class="text-xl font-bold text-white self-start mb-4">Subject Breakdown</h3>
+<div class="relative w-full aspect-square max-w-[300px]">
+<!-- SVG Radar Chart -->
+<svg class="w-full h-full" data-alt="Radar chart showing strengths in Math and Biology, weaknesses in History and Literature" viewbox="0 0 200 200">
+<!-- Background Web -->
+<g fill="none" stroke="#334155" stroke-width="1">
+<polygon opacity="1" points="100,10 178,55 178,145 100,190 22,145 22,55"></polygon>
+<polygon opacity="0.5" points="100,40 152,70 152,130 100,160 48,130 48,70"></polygon>
+<polygon opacity="0.3" points="100,70 126,85 126,115 100,130 74,115 74,85"></polygon>
+<!-- Axis Lines -->
+<line opacity="0.3" x1="100" x2="100" y1="100" y2="10"></line>
+<line opacity="0.3" x1="100" x2="178" y1="100" y2="55"></line>
+<line opacity="0.3" x1="100" x2="178" y1="100" y2="145"></line>
+<line opacity="0.3" x1="100" x2="100" y1="100" y2="190"></line>
+<line opacity="0.3" x1="100" x2="22" y1="100" y2="145"></line>
+<line opacity="0.3" x1="100" x2="22" y1="100" y2="55"></line>
+</g>
+<!-- Data Shape -->
+<!-- Math (Top): 90% -->
+<!-- Physics (TR): 80% -->
+<!-- Lit (BR): 50% -->
+<!-- History (B): 60% -->
+<!-- Bio (BL): 85% -->
+<!-- Lang (TL): 70% -->
+<polygon fill="#135bec" fill-opacity="0.3" points="100,19 162.4,64 139,122.5 100,154 33.7,138.25 45.4,68.5" stroke="#135bec" stroke-width="2">
+</polygon>
+<!-- Dots -->
+<circle cx="100" cy="19" fill="#ffffff" r="3"></circle>
+<circle cx="162.4" cy="64" fill="#ffffff" r="3"></circle>
+<circle cx="139" cy="122.5" fill="#ffffff" r="3"></circle>
+<circle cx="100" cy="154" fill="#ffffff" r="3"></circle>
+<circle cx="33.7" cy="138.25" fill="#ffffff" r="3"></circle>
+<circle cx="45.4" cy="68.5" fill="#ffffff" r="3"></circle>
+<!-- Labels -->
+<text fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle" x="100" y="5">MATH</text>
+<text fill="#94a3b8" font-size="10" font-weight="600" text-anchor="start" x="190" y="55">PHYS</text>
+<text fill="#94a3b8" font-size="10" font-weight="600" text-anchor="start" x="190" y="155">LIT</text>
+<text fill="#94a3b8" font-size="10" font-weight="600" text-anchor="middle" x="100" y="200">HIST</text>
+<text fill="#94a3b8" font-size="10" font-weight="600" text-anchor="end" x="10" y="155">BIO</text>
+<text fill="#94a3b8" font-size="10" font-weight="600" text-anchor="end" x="10" y="55">LANG</text>
+</svg>
+</div>
+</div>
+<!-- Quick Action / Suggested -->
+<div class="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+<div class="absolute -right-10 -bottom-10 opacity-20">
+<span class="material-symbols-outlined text-[150px]">psychology</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-3 opacity-90">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="text-xs font-bold uppercase tracking-wider">AI Suggestion</span>
+</div>
+<h4 class="text-xl font-bold mb-2">Review Quadratics?</h4>
+<p class="text-sm opacity-90 mb-4 font-light">Your accuracy drops in evening sessions. Try a quick 5 min flashcard set now.</p>
+<button class="w-full py-3 bg-white text-primary font-bold rounded-lg hover:bg-slate-100 transition shadow-sm">
+                            Start 5 min Session
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

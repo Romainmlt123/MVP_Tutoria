@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'liga';
+}
+
+@theme {
+  /* ---- Light & Colorful Palette ---- */
+  --color-primary: #6C5CE7;
+  --color-primary-light: #a29bfe;
+  --color-primary-dark: #5a4bd1;
+  --color-secondary: #00b894;
+
+  --color-background: #f0f2f8;
+  --color-surface: #ffffff;
+  --color-sidebar: #ffffff;
+
+  --color-accent-pink: #fd79a8;
+  --color-accent-orange: #fdcb6e;
+  --color-accent-coral: #e17055;
+  --color-accent-teal: #00cec9;
+  --color-accent-purple: #a29bfe;
+  --color-accent-blue: #74b9ff;
+  --color-accent-green: #55efc4;
+
+  --color-text-primary: #2d3436;
+  --color-text-secondary: #636e72;
+  --color-text-muted: #b2bec3;
+  --color-border: #e2e8f0;
+
+  --font-family-display: 'Space Grotesk', sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+/* 5 traits vocaux : animation haut + bas (centre), trajectoire irrégulière */
+@keyframes voice-bar {
+  0%   { transform: scaleY(0.4); }
+  18%  { transform: scaleY(0.85); }
+  35%  { transform: scaleY(0.35); }
+  52%  { transform: scaleY(1); }
+  70%  { transform: scaleY(0.5); }
+  88%  { transform: scaleY(0.75); }
+  100% { transform: scaleY(0.4); }
+}
+.animate-voice-bar {
+  transform-origin: center;
+  animation: voice-bar ease-in-out infinite;
+}
+
+/* Voice mode orb */
+.orb-core {
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(108,92,231,0.4) 20%, rgba(108,92,231,1) 60%, #4834d4 100%);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Selection */
+::selection {
+  background: rgba(108, 92, 231, 0.2);
+  color: #2d3436;
+}

@@ -1,0 +1,8 @@
+# Graphiques générés
+*.png
+*.jpg
+*.jpeg
+*.svg
+
+# Garder le dossier
+!.gitkeep

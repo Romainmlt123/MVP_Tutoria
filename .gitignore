@@ -1,0 +1,42 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional
+images/generated-*.png
+test_graphique_tutoria/static/dist/

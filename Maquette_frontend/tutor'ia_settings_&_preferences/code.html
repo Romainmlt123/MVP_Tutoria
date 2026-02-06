@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tutor'IA Settings</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "primary-hover": "#1d64f2",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#0b0e14", // Deep dark background
+                        "surface-dark": "#111722", // Sidebar & Card background
+                        "surface-lighter": "#1c2433", // Input/Hover background
+                        "text-secondary": "#92a4c9",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom Scrollbar for Webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111722; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232f48; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #324467; 
+        }
+
+        /* Range Slider Styling */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #135bec;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 0 4px rgba(19, 91, 236, 0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #324467;
+            border-radius: 2px;
+        }
+        
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #135bec;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #135bec;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden h-screen flex">
+<!-- Sidebar -->
+<aside class="w-20 lg:w-72 flex-shrink-0 flex flex-col border-r border-[#232f48] bg-surface-dark transition-all duration-300">
+<!-- Logo Area -->
+<div class="h-20 flex items-center px-6 lg:px-8 border-b border-[#232f48]/50">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-lg bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[20px]">school</span>
+</div>
+<div class="hidden lg:flex flex-col">
+<h1 class="text-white text-lg font-bold leading-tight tracking-tight">Tutor'IA</h1>
+<span class="text-text-secondary text-xs font-medium uppercase tracking-wider">Premium</span>
+</div>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-2">
+<!-- Nav Item: Profile -->
+<a class="group flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-surface-lighter hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<span class="hidden lg:block text-sm font-medium">Profile</span>
+</a>
+<!-- Nav Item: AI Preferences (Active) -->
+<a class="group flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(19,91,236,0.1)]" href="#">
+<span class="material-symbols-outlined text-[24px] fill-1">auto_awesome</span>
+<span class="hidden lg:block text-sm font-bold">AI Preferences</span>
+</a>
+<!-- Nav Item: Notifications -->
+<a class="group flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-surface-lighter hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+<span class="hidden lg:block text-sm font-medium">Notifications</span>
+</a>
+<!-- Nav Item: Subscription -->
+<a class="group flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-surface-lighter hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">credit_card</span>
+<span class="hidden lg:block text-sm font-medium">Subscription</span>
+</a>
+<!-- Nav Item: Privacy -->
+<a class="group flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-surface-lighter hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">shield</span>
+<span class="hidden lg:block text-sm font-medium">Privacy</span>
+</a>
+</nav>
+<!-- User Footer -->
+<div class="p-4 border-t border-[#232f48]">
+<div class="flex items-center gap-3 p-2 rounded-xl bg-[#1c2433]">
+<div class="relative h-10 w-10 overflow-hidden rounded-full bg-slate-600">
+<img alt="User Profile Picture" class="h-full w-full object-cover" data-alt="Portrait of a young student with a serious expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJP9-WC97dJINSA6JXGY3t_sYht0V_94XaI4yudAVkefNIHsaYfeHlvW5gY7_uo-K85K8KK2-X4gcCMTPY2FXCygV8w0dQ7w6kIITN-JRc9PqVXDCizpC_wnjDpGMWPYuoV-emptkeoznBTCUzdE_ke08PpUxZD9ArRjv_-gPjSgc8f2-J8GhVIf4PwM5FbdmjCZvyLd15-PwmZmeIfTvJgEsK8r-r4uJzOi33h3uQ74Uve5-gpLcM3GaHFHY1B5VGoh6UwR7P0OI"/>
+<div class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-[#1c2433]"></div>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-medium text-white truncate">Alex Morgan</p>
+<p class="text-xs text-text-secondary truncate">Student Plan</p>
+</div>
+<button class="hidden lg:flex ml-auto text-text-secondary hover:text-white">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Top Header Mobile Only -->
+<div class="lg:hidden flex items-center justify-between p-4 border-b border-[#232f48] bg-surface-dark">
+<span class="text-white font-bold">AI Preferences</span>
+<button class="text-white"><span class="material-symbols-outlined">menu</span></button>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-6 lg:p-12 scroll-smooth">
+<div class="max-w-4xl mx-auto space-y-10">
+<!-- Page Header -->
+<div class="flex flex-col gap-2">
+<h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">AI Preferences</h2>
+<p class="text-text-secondary text-base max-w-2xl">Customize the personality, voice, and interaction style of your personal AI tutor to match your learning pace.</p>
+</div>
+<!-- Section: Tutor Persona -->
+<section class="space-y-5">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary">psychology</span>
+<h3 class="text-xl font-bold text-white">Tutor Persona</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Card 1: Encouraging -->
+<label class="cursor-pointer group relative">
+<input checked="" class="peer sr-only" name="persona" type="radio" value="encouraging"/>
+<div class="h-full rounded-2xl border border-[#324467] bg-surface-dark p-5 transition-all duration-200 hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:shadow-[0_0_20px_rgba(19,91,236,0.15)] flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div class="p-3 rounded-lg bg-[#232f48] text-white group-hover:text-primary transition-colors peer-checked:bg-primary peer-checked:text-white">
+<span class="material-symbols-outlined">sentiment_very_satisfied</span>
+</div>
+<div class="h-5 w-5 rounded-full border-2 border-[#324467] peer-checked:border-primary peer-checked:bg-primary flex items-center justify-center">
+<div class="h-2 w-2 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+</div>
+</div>
+<div>
+<p class="text-lg font-bold text-white mb-1">Encouraging</p>
+<p class="text-sm text-text-secondary leading-relaxed">Focuses on motivation and positive reinforcement. Great for new subjects.</p>
+</div>
+</div>
+</label>
+<!-- Card 2: Rigorous -->
+<label class="cursor-pointer group relative">
+<input class="peer sr-only" name="persona" type="radio" value="rigorous"/>
+<div class="h-full rounded-2xl border border-[#324467] bg-surface-dark p-5 transition-all duration-200 hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:shadow-[0_0_20px_rgba(19,91,236,0.15)] flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div class="p-3 rounded-lg bg-[#232f48] text-white group-hover:text-primary transition-colors peer-checked:bg-primary peer-checked:text-white">
+<span class="material-symbols-outlined">fitness_center</span>
+</div>
+<div class="h-5 w-5 rounded-full border-2 border-[#324467] peer-checked:border-primary peer-checked:bg-primary flex items-center justify-center">
+<div class="h-2 w-2 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+</div>
+</div>
+<div>
+<p class="text-lg font-bold text-white mb-1">Rigorous</p>
+<p class="text-sm text-text-secondary leading-relaxed">Straight to the point, challenging, and fast-paced. Best for exam prep.</p>
+</div>
+</div>
+</label>
+<!-- Card 3: Socratic -->
+<label class="cursor-pointer group relative">
+<input class="peer sr-only" name="persona" type="radio" value="socratic"/>
+<div class="h-full rounded-2xl border border-[#324467] bg-surface-dark p-5 transition-all duration-200 hover:border-primary/50 peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:shadow-[0_0_20px_rgba(19,91,236,0.15)] flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div class="p-3 rounded-lg bg-[#232f48] text-white group-hover:text-primary transition-colors peer-checked:bg-primary peer-checked:text-white">
+<span class="material-symbols-outlined">lightbulb</span>
+</div>
+<div class="h-5 w-5 rounded-full border-2 border-[#324467] peer-checked:border-primary peer-checked:bg-primary flex items-center justify-center">
+<div class="h-2 w-2 rounded-full bg-white opacity-0 peer-checked:opacity-100"></div>
+</div>
+</div>
+<div>
+<p class="text-lg font-bold text-white mb-1">Socratic</p>
+<p class="text-sm text-text-secondary leading-relaxed">Teaches by asking questions to guide your own critical thinking path.</p>
+</div>
+</div>
+</label>
+</div>
+</section>
+<hr class="border-[#232f48]"/>
+<!-- Section: Voice Settings -->
+<section class="space-y-6">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary">record_voice_over</span>
+<h3 class="text-xl font-bold text-white">Voice Settings</h3>
+</div>
+<div class="bg-surface-dark border border-[#324467] rounded-2xl p-6 md:p-8 space-y-8">
+<!-- Voice Selector -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium text-white">Voice Model</label>
+<div class="relative">
+<select class="w-full appearance-none bg-[#1c2433] border border-[#324467] text-white rounded-lg py-3 px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer">
+<option>Atlas (Male - Deep &amp; Calm)</option>
+<option>Nova (Female - Energetic)</option>
+<option>Luna (Female - Soft &amp; Slow)</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-text-secondary">
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Preview Button -->
+<div class="flex items-end">
+<button class="w-full md:w-auto flex items-center justify-center gap-2 bg-[#232f48] hover:bg-[#324467] text-white px-6 py-3 rounded-lg transition-colors font-medium border border-[#324467]">
+<span class="material-symbols-outlined text-[20px]">play_circle</span>
+                                    Play Sample
+                                </button>
+</div>
+</div>
+<!-- Speed Slider -->
+<div class="flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<label class="text-sm font-medium text-white">Speech Rate</label>
+<span class="text-primary font-bold bg-primary/10 px-2 py-0.5 rounded text-sm">1.2x</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-xs text-text-secondary font-medium">0.5x</span>
+<input class="w-full h-2 bg-[#324467] rounded-lg appearance-none cursor-pointer" max="2.0" min="0.5" step="0.1" type="range" value="1.2"/>
+<span class="text-xs text-text-secondary font-medium">2.0x</span>
+</div>
+</div>
+</div>
+</section>
+<hr class="border-[#232f48]"/>
+<!-- Section: Interaction Settings -->
+<section class="space-y-6 pb-24">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary">tune</span>
+<h3 class="text-xl font-bold text-white">Interaction</h3>
+</div>
+<div class="space-y-4">
+<!-- Toggle 1 -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-surface-dark border border-[#324467]">
+<div class="flex gap-4 items-center">
+<div class="hidden sm:flex h-10 w-10 items-center justify-center rounded-lg bg-[#232f48] text-white">
+<span class="material-symbols-outlined">graphic_eq</span>
+</div>
+<div>
+<p class="text-base font-medium text-white">Interrupt Mode</p>
+<p class="text-sm text-text-secondary">Allow the AI to interject if you pause for too long during a session.</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300 left-0 border-[#324467]" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-[#324467] cursor-pointer" for="toggle1"></label>
+</div>
+</div>
+<!-- Toggle 2 -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-surface-dark border border-[#324467]">
+<div class="flex gap-4 items-center">
+<div class="hidden sm:flex h-10 w-10 items-center justify-center rounded-lg bg-[#232f48] text-white">
+<span class="material-symbols-outlined">volume_up</span>
+</div>
+<div>
+<p class="text-base font-medium text-white">Auto-play Audio</p>
+<p class="text-sm text-text-secondary">Automatically read out text responses when they are generated.</p>
+</div>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300 left-0 border-[#324467]" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-[#324467] cursor-pointer" for="toggle2"></label>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Sticky Footer Action Bar -->
+<div class="absolute bottom-0 w-full bg-surface-dark/90 backdrop-blur-md border-t border-[#232f48] p-4 lg:px-12 flex justify-between items-center z-10">
+<button class="text-text-secondary hover:text-white text-sm font-medium px-4 py-2 transition-colors">
+                Reset to Default
+            </button>
+<div class="flex gap-3">
+<button class="hidden sm:block px-6 py-2.5 rounded-lg border border-[#324467] text-white font-medium hover:bg-[#232f48] transition-colors text-sm">
+                    Discard
+                </button>
+<button class="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold shadow-lg shadow-primary/25 transition-all transform hover:-translate-y-0.5 text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                    Save Changes
+                </button>
+</div>
+</div>
+</main>
+</body></html>
