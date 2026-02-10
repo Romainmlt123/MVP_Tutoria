@@ -17,13 +17,15 @@ export default function StatCard({ label, value, change, changeLabel, icon, bgIc
       </div>
       <div>
         <p className="text-3xl font-bold text-text-primary mb-1">{value}</p>
-        <div className={`flex items-center gap-1 text-sm font-medium ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
-          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
-            {isPositive ? 'trending_up' : 'trending_down'}
-          </span>
-          <span>{change}</span>
-          <span className="text-text-muted font-normal ml-1">{changeLabel}</span>
-        </div>
+        {(change != null && change !== '') && (
+          <div className={`flex items-center gap-1 text-sm font-medium ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+              {isPositive ? 'trending_up' : 'trending_down'}
+            </span>
+            <span>{change}</span>
+            {changeLabel != null && changeLabel !== '' && <span className="text-text-muted font-normal ml-1">{changeLabel}</span>}
+          </div>
+        )}
       </div>
     </div>
   )

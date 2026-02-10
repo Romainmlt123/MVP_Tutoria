@@ -1,6 +1,6 @@
 # Diagnostic mode vocal TutorIA
 
-## Ce qui a été vérifié
+## Ce qui a été vérifiée,c 
 
 ### 1. Backend et API
 - **Script** : `python scripts/test_voice.py`

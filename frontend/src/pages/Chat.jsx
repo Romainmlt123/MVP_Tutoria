@@ -1,32 +1,49 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import ChatHistory from '../components/ChatHistory'
 import ChatMessage from '../components/ChatMessage'
 import ChatInput from '../components/ChatInput'
 import useChatStore from '../store/chatStore'
-import { chatHistory } from '../data/mockData'
+import useAuthStore from '../store/authStore'
 
 export default function Chat() {
+  const { user } = useAuthStore()
   const [historyOpen, setHistoryOpen] = useState(false)
   const {
+    conversations,
+    currentConversationId,
     messages,
     sendMessage,
     isLoading,
     error,
-    clearMessages,
+    clearCurrentConversation,
+    fetchConversations,
+    loadConversation,
   } = useChatStore()
+
+  useEffect(() => {
+    if (user?.id) fetchConversations(user.id)
+  }, [user?.id, fetchConversations])
 
   const handleSend = useCallback(
     (text) => {
-      sendMessage(text)
+      if (user?.id) sendMessage(text, user.id)
     },
-    [sendMessage]
+    [sendMessage, user?.id]
   )
 
   const handleNewChat = useCallback(() => {
-    clearMessages()
+    clearCurrentConversation()
     setHistoryOpen(false)
-  }, [clearMessages])
+  }, [clearCurrentConversation])
+
+  const handleSelectConversation = useCallback(
+    (id) => {
+      loadConversation(id)
+      setHistoryOpen(false)
+    },
+    [loadConversation]
+  )
 
   return (
     <div className="flex h-full w-full bg-background font-display text-text-primary antialiased overflow-hidden relative">
@@ -45,7 +62,13 @@ export default function Chat() {
         aria-modal="true"
         aria-label="Historique des conversations"
       >
-        <ChatHistory history={chatHistory} onNewChat={handleNewChat} onClose={() => setHistoryOpen(false)} />
+        <ChatHistory
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          onSelectConversation={handleSelectConversation}
+          onNewChat={handleNewChat}
+          onClose={() => setHistoryOpen(false)}
+        />
       </div>
 
       <main className="flex-1 flex flex-col relative h-full min-w-0 bg-background flex overflow-hidden">
@@ -91,11 +114,13 @@ export default function Chat() {
                 {error}
               </div>
             )}
-            <div className="flex justify-center">
-              <span className="text-xs font-medium text-text-muted bg-surface px-3 py-1 rounded-full border border-border shadow-sm">
-                Aujourd&apos;hui, 10h42
-              </span>
-            </div>
+            {messages.length > 0 && (
+              <div className="flex justify-center">
+                <span className="text-xs font-medium text-text-muted bg-surface px-3 py-1 rounded-full border border-border shadow-sm">
+                  {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </span>
+              </div>
+            )}
             {messages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} />
             ))}

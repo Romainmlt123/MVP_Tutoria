@@ -9,6 +9,7 @@ Index de la documentation du projet.
 | Document | Description |
 |----------|-------------|
 | **[VOICE_DIAGNOSTIC.md](VOICE_DIAGNOSTIC.md)** | Dépannage du mode vocal : micro, permissions, logs console, tests. |
+| **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** | Base de données Supabase : projet, schéma (profiles, conversations, messages, settings), RLS, clients front/back. |
 | **[SETUP_GITHUB.md](SETUP_GITHUB.md)** | Configuration du dépôt GitHub : remote, premier push. |
 | **[../README.md](../README.md)** | README principal : installation, structure, API. |
 | **[../PATCHLOG.md](../PATCHLOG.md)** | Patchlog : erreurs rencontrées et comment elles ont été résolues. |

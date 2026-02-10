@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Logo from '../components/Logo'
 import PersonaCard from '../components/PersonaCard'
 import Toggle from '../components/Toggle'
-import { user, personas } from '../data/mockData'
+import { personas } from '../data/mockData'
+import useAuthStore from '../store/authStore'
+import useProfileStore from '../store/profileStore'
+import useUserSettingsStore from '../store/userSettingsStore'
 
 const settingsNav = [
   { icon: 'person', label: 'Profil', id: 'profile' },
@@ -14,11 +17,46 @@ const settingsNav = [
 ]
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('ai')
+  const { user } = useAuthStore()
+  const { profile, fetchProfile, updateProfile } = useProfileStore()
+  const { settings, fetchSettings, upsertSettings, getAiPrefs } = useUserSettingsStore()
+  const [activeTab, setActiveTab] = useState('profile')
   const [selectedPersona, setSelectedPersona] = useState('encouraging')
   const [speechRate, setSpeechRate] = useState(1.2)
   const [interruptMode, setInterruptMode] = useState(false)
   const [autoPlay, setAutoPlay] = useState(true)
+  const [displayName, setDisplayName] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchProfile(user.id)
+      fetchSettings(user.id)
+    }
+  }, [user?.id, fetchProfile, fetchSettings])
+
+  useEffect(() => {
+    if (profile) {
+      setDisplayName(profile.display_name ?? '')
+      setAvatarUrl(profile.avatar_url ?? '')
+    }
+  }, [profile])
+
+  useEffect(() => {
+    if (!settings) return
+    const prefs = getAiPrefs()
+    setSelectedPersona(prefs.persona)
+    setSpeechRate(prefs.speechRate)
+    setInterruptMode(prefs.interruptMode)
+    setAutoPlay(prefs.autoPlay)
+  }, [settings])
+
+  const displayNameLabel = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur'
+  const userEmail = user?.email ?? ''
 
   return (
     <div className="flex h-screen w-full bg-background font-display text-text-primary overflow-hidden">
@@ -51,16 +89,19 @@ export default function Settings() {
         <div className="p-4 border-t border-border">
           <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50">
             <div className="relative shrink-0">
-              <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full object-cover" />
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt={displayNameLabel} className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-accent-purple/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-[20px]">person</span>
+                </div>
+              )}
               <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-white" />
             </div>
-            <div className="hidden lg:block overflow-hidden">
-              <p className="text-sm font-medium text-text-primary truncate">{user.shortName} Morgan</p>
-              <p className="text-xs text-text-secondary truncate">Forfait Étudiant</p>
+            <div className="hidden lg:block overflow-hidden min-w-0">
+              <p className="text-sm font-medium text-text-primary truncate">{displayNameLabel}</p>
+              <p className="text-xs text-text-secondary truncate">{userEmail || 'Forfait Étudiant'}</p>
             </div>
-            <button className="hidden lg:flex ml-auto text-text-muted hover:text-red-500" aria-label="Se déconnecter">
-              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">logout</span>
-            </button>
           </div>
         </div>
       </aside>
@@ -69,6 +110,58 @@ export default function Settings() {
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         <div className="flex-1 overflow-y-auto p-6 lg:p-12 scroll-smooth">
           <div className="max-w-4xl mx-auto space-y-10">
+            {/* Onglet : Profil */}
+            {activeTab === 'profile' && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight">Profil</h2>
+                  <p className="text-text-secondary text-base max-w-2xl">Gère ton nom d&apos;affichage et ton avatar.</p>
+                </div>
+                <section className="space-y-6" aria-labelledby="profile-heading">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="material-symbols-outlined text-primary" aria-hidden="true">person</span>
+                    <h3 id="profile-heading" className="text-xl font-bold text-text-primary">Informations</h3>
+                  </div>
+                  <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="profile-display-name" className="text-sm font-medium text-text-primary">Nom d&apos;affichage</label>
+                      <input
+                        id="profile-display-name"
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder={user?.email?.split('@')[0] || 'Mon pseudo'}
+                        className="w-full rounded-xl border border-border bg-background py-3 px-4 text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="profile-avatar-url" className="text-sm font-medium text-text-primary">URL de l&apos;avatar</label>
+                      <input
+                        id="profile-avatar-url"
+                        type="url"
+                        value={avatarUrl}
+                        onChange={(e) => setAvatarUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="w-full rounded-xl border border-border bg-background py-3 px-4 text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      />
+                      {avatarUrl && (
+                        <div className="mt-2 flex items-center gap-3">
+                          <img src={avatarUrl} alt="Aperçu" className="h-12 w-12 rounded-full object-cover border border-border" onError={(e) => { e.target.style.display = 'none' }} />
+                          <span className="text-xs text-text-muted">Aperçu</span>
+                        </div>
+                      )}
+                    </div>
+                    {profileSaved && (
+                      <p className="text-sm text-green-600 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                        Profil enregistré.
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </>
+            )}
+
             {/* Onglet : Préférences IA */}
             {activeTab === 'ai' && (
               <>
@@ -153,12 +246,18 @@ export default function Settings() {
                     <Toggle id="interrupt" icon="graphic_eq" title="Mode interruption" description="Permettre à l'IA d'intervenir si vous faites une pause trop longue." checked={interruptMode} onChange={setInterruptMode} />
                     <Toggle id="autoplay" icon="volume_up" title="Lecture audio automatique" description="Lire automatiquement les réponses textuelles à voix haute." checked={autoPlay} onChange={setAutoPlay} />
                   </div>
+                  {settingsSaved && (
+                    <p className="text-sm text-green-600 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                      Préférences enregistrées.
+                    </p>
+                  )}
                 </section>
               </>
             )}
 
             {/* Placeholder pour les autres onglets */}
-            {activeTab !== 'ai' && (
+            {activeTab !== 'profile' && activeTab !== 'ai' && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4" aria-hidden="true">
                   <span className="material-symbols-outlined text-primary text-[32px]">
@@ -177,12 +276,49 @@ export default function Settings() {
         </div>
 
         <div className="absolute bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-border p-4 lg:px-12 flex justify-between items-center z-10">
-          <button className="text-text-secondary hover:text-primary text-sm font-medium px-4 py-2 transition-colors">Réinitialiser</button>
+          <button type="button" className="text-text-secondary hover:text-primary text-sm font-medium px-4 py-2 transition-colors">Réinitialiser</button>
           <div className="flex gap-3">
             <Link to="/" className="hidden sm:block px-6 py-2.5 rounded-lg border border-border text-text-primary font-medium hover:bg-slate-50 transition-colors text-sm">Annuler</Link>
-            <button className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-purple text-white font-bold shadow-lg shadow-primary/25 transition-all transform hover:-translate-y-0.5 text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
-              Enregistrer
+            <button
+              type="button"
+              onClick={async () => {
+                if (!user?.id) return
+                if (activeTab === 'profile') {
+                  setProfileSaving(true)
+                  setProfileSaved(false)
+                  setSettingsSaved(false)
+                  const { error } = await updateProfile(user.id, { display_name: displayName || null, avatar_url: avatarUrl || null })
+                  setProfileSaving(false)
+                  if (!error) setProfileSaved(true)
+                } else if (activeTab === 'ai') {
+                  setSettingsSaving(true)
+                  setSettingsSaved(false)
+                  setProfileSaved(false)
+                  const current = settings ?? {}
+                  const { error } = await upsertSettings(user.id, {
+                    theme: current.theme ?? 'light',
+                    language: current.language ?? 'fr',
+                    notifications_enabled: current.notifications_enabled ?? true,
+                    extra: { ...(current.extra ?? {}), persona: selectedPersona, speechRate, interruptMode, autoPlay },
+                  })
+                  setSettingsSaving(false)
+                  if (!error) setSettingsSaved(true)
+                }
+              }}
+              disabled={(profileSaving || settingsSaving) || !user?.id}
+              className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent-purple text-white font-bold shadow-lg shadow-primary/25 transition-all transform hover:-translate-y-0.5 text-sm flex items-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
+            >
+              {(profileSaving || settingsSaving) ? (
+                <>
+                  <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                  Enregistrement...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
+                  Enregistrer
+                </>
+              )}
             </button>
           </div>
         </div>

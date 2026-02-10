@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom'
-import { user } from '../data/mockData'
+import { NavLink, useNavigate } from 'react-router-dom'
 import Logo from './Logo'
+import useAuthStore from '../store/authStore'
+import useProfileStore from '../store/profileStore'
 
 const navItems = [
   { to: '/', icon: 'home', label: 'Accueil' },
@@ -10,6 +11,18 @@ const navItems = [
 ]
 
 export default function Sidebar() {
+  const navigate = useNavigate()
+  const { user, signOut } = useAuthStore()
+  const { profile } = useProfileStore()
+  const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur'
+  const displayRole = user?.email ? 'Membre' : 'Invité'
+  const avatarUrl = profile?.avatar_url
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <aside className="flex w-20 flex-col items-center border-r border-border bg-sidebar py-8 lg:w-64 lg:items-stretch lg:px-6 transition-all duration-300 z-20">
       {/* Logo */}
@@ -54,13 +67,31 @@ export default function Sidebar() {
           <span className="hidden text-sm font-medium lg:block">Paramètres</span>
         </NavLink>
 
-        {/* Profil */}
-        <div className="mt-4 flex items-center gap-3 border-t border-border pt-4">
-          <img src={user.avatar} alt={user.name} className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/20" />
-          <div className="hidden overflow-hidden lg:block">
-            <p className="truncate text-sm font-medium text-text-primary">{user.name}</p>
-            <p className="truncate text-xs text-text-secondary">{user.role}</p>
+        {/* Profil + Déconnexion */}
+        <div className="mt-4 flex flex-col gap-2 border-t border-border pt-4">
+          <div className="flex items-center gap-3">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={displayName} className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/20 shrink-0" />
+            ) : (
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-accent-purple/20 flex items-center justify-center ring-2 ring-primary/20 shrink-0">
+                <span className="material-symbols-outlined text-primary text-[20px]">person</span>
+              </div>
+            )}
+            <div className="hidden overflow-hidden lg:block min-w-0">
+              <p className="truncate text-sm font-medium text-text-primary">{displayName}</p>
+              <p className="truncate text-xs text-text-secondary">{user?.email || displayRole}</p>
+            </div>
           </div>
+          {user && (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all w-full"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+              <span className="hidden text-sm font-medium lg:inline">Déconnexion</span>
+            </button>
+          )}
         </div>
       </div>
     </aside>
