@@ -1,0 +1,19 @@
+# Blueprint Render pour le backend Tutor'IA (API FastAPI).
+# À la connexion du repo, Render propose de créer le service à partir de ce fichier.
+# Tu dois ensuite ajouter OPENAI_API_KEY dans Environment Variables (dashboard).
+
+services:
+  - type: web
+    name: tutoria-api
+    runtime: python
+    plan: free
+
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python main.py
+
+    healthCheckPath: /health
+
+    envVars:
+      - key: DEBUG
+        value: "false"
+      # OPENAI_API_KEY : à ajouter dans le dashboard Render (Environment Variables, Secret)
