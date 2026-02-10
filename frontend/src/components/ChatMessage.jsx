@@ -1,6 +1,15 @@
 import { user } from '../data/mockData'
 import CodeBlock from './CodeBlock'
 import GraphPanel from './GraphPanel'
+
+/** Retire le bloc ```jsxgraph ... ``` du texte pour ne jamais afficher la config JSON à l'écran. */
+function stripJsxGraphBlock(text) {
+  if (!text || typeof text !== 'string') return text
+  let out = text.replace(/```\s*jsxgraph\s*[\s\S]*?```/gi, '')
+  out = out.replace(/\n{3,}/g, '\n\n').trim()
+  return out || ''
+}
+
 function renderWithCode(text) {
   const parts = text.split(/(<code>.*?<\/code>)/g)
   return parts.map((part, i) => {
@@ -42,7 +51,7 @@ export default function ChatMessage({ message }) {
           <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide">PRO</span>
         </div>
         <div className="text-text-primary text-[15px] leading-7 space-y-4">
-          <p>{renderWithCode(message.content)}</p>
+          <p>{renderWithCode(stripJsxGraphBlock(message.content))}</p>
 
           {message.graph && (
             <div className="mt-4">

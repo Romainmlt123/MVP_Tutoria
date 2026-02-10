@@ -46,21 +46,21 @@ export default function Chat() {
   )
 
   return (
-    <div className="flex h-full w-full bg-background font-display text-text-primary antialiased overflow-hidden relative">
-      {/* Fond assombri uniquement sur la zone chat (pas sur la nav) */}
+    <div className="flex h-full w-full bg-gradient-to-b from-slate-50 via-white to-primary/[0.04] font-display text-text-primary antialiased overflow-hidden relative">
+      {/* Overlay + tiroir : uniquement sur mobile (sur desktop l'historique est dans la sidebar) */}
       <div
-        className={`fixed left-20 right-0 top-0 bottom-0 z-20 bg-black/30 transition-opacity duration-300 lg:left-64 ${
+        className={`fixed left-0 right-0 top-0 bottom-0 z-20 bg-black/30 transition-opacity duration-300 lg:hidden ${
           historyOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden="true"
         onClick={() => setHistoryOpen(false)}
       />
       <div
-        className={`fixed left-20 top-0 bottom-0 z-30 w-[280px] transform transition-transform duration-300 ease-out lg:left-64 ${
+        className={`fixed left-0 top-0 bottom-20 z-30 w-full max-w-[min(100%,320px)] transform transition-transform duration-300 ease-out lg:hidden ${
           historyOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-modal="true"
-        aria-label="Historique des conversations"
+        aria-label="Historique des conversations (mobile)"
       >
         <ChatHistory
           conversations={conversations}
@@ -71,13 +71,13 @@ export default function Chat() {
         />
       </div>
 
-      <main className="flex-1 flex flex-col relative h-full min-w-0 bg-background flex overflow-hidden">
+      <main className="flex-1 flex flex-col relative h-full min-w-0 flex overflow-hidden">
         {/* Mode */}
         <header className="h-20 flex items-center justify-center shrink-0 z-10 relative">
           <button
             type="button"
             onClick={() => setHistoryOpen((o) => !o)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-text-muted hover:text-primary hover:bg-primary/5 transition-colors lg:hidden"
             aria-label={historyOpen ? 'Fermer l\'historique' : 'Ouvrir l\'historique des conversations'}
             aria-expanded={historyOpen}
           >
@@ -106,7 +106,7 @@ export default function Chat() {
         </header>
 
         {/* Zone de chat */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth z-10 min-w-0">
+        <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth z-10 min-w-0 bg-transparent">
           <div className="max-w-3xl mx-auto flex flex-col gap-8 pb-32">
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm flex items-center gap-2">
