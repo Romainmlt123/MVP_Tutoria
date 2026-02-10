@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
+import BottomNav from '../components/BottomNav'
 import useAuthStore from '../store/authStore'
 import useProfileStore from '../store/profileStore'
 import useUserSettingsStore from '../store/userSettingsStore'
@@ -35,7 +36,7 @@ export default function MainLayout() {
   return (
     <div className="flex h-screen w-full bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto relative flex flex-col">
+      <main className="flex-1 overflow-y-auto relative flex flex-col pb-20 lg:pb-0">
         {emailNotConfirmed && !bannerDismissed && (
           <div className="shrink-0 flex items-center justify-between gap-4 px-4 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
             <div className="flex items-center gap-2 min-w-0">
@@ -66,6 +67,7 @@ export default function MainLayout() {
           <Outlet />
         </div>
       </main>
+      <BottomNav />
     </div>
   )
 }

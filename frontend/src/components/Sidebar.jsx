@@ -24,10 +24,10 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="flex w-20 flex-col items-center border-r border-border bg-sidebar py-8 lg:w-64 lg:items-stretch lg:px-6 transition-all duration-300 z-20">
+    <aside className="hidden lg:flex w-64 flex-col items-stretch border-r border-border bg-sidebar py-8 px-6 transition-all duration-300 z-20">
       {/* Logo */}
-      <div className="mb-10 flex justify-center lg:justify-start">
-        <Logo size="md" textClassName="hidden lg:flex" />
+      <div className="mb-10 flex justify-start">
+        <Logo size="md" textClassName="flex" />
       </div>
 
       {/* Navigation */}
@@ -46,7 +46,7 @@ export default function Sidebar() {
             }
           >
             <span className="material-symbols-outlined" aria-hidden="true">{item.icon}</span>
-            <span className="hidden text-sm font-medium lg:block">{item.label}</span>
+            <span className="text-sm font-medium">{item.label}</span>
           </NavLink>
         ))}
       </nav>
@@ -64,7 +64,7 @@ export default function Sidebar() {
           }
         >
           <span className="material-symbols-outlined" aria-hidden="true">settings</span>
-          <span className="hidden text-sm font-medium lg:block">Paramètres</span>
+          <span className="text-sm font-medium">Paramètres</span>
         </NavLink>
 
         {/* Profil + Déconnexion */}
@@ -77,7 +77,7 @@ export default function Sidebar() {
                 <span className="material-symbols-outlined text-primary text-[20px]">person</span>
               </div>
             )}
-            <div className="hidden overflow-hidden lg:block min-w-0">
+            <div className="overflow-hidden min-w-0">
               <p className="truncate text-sm font-medium text-text-primary">{displayName}</p>
               <p className="truncate text-xs text-text-secondary">{user?.email || displayRole}</p>
             </div>
@@ -89,7 +89,7 @@ export default function Sidebar() {
               className="flex items-center gap-3 rounded-xl px-3 py-3 text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all w-full"
             >
               <span className="material-symbols-outlined text-[20px]">logout</span>
-              <span className="hidden text-sm font-medium lg:inline">Déconnexion</span>
+              <span className="text-sm font-medium">Déconnexion</span>
             </button>
           )}
         </div>
