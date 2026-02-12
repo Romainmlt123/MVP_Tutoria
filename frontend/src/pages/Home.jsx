@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StreakWidget from '../components/StreakWidget'
 import SubjectCard from '../components/SubjectCard'
@@ -7,6 +7,7 @@ import useProfileStore from '../store/profileStore'
 import useChatStore from '../store/chatStore'
 import useFlashcardStore from '../store/flashcardStore'
 import { quickAccessSubjects } from '../data/mockData'
+import { getRandomQuote } from '../data/quotes'
 
 const DAY_LABEL_SHORT = { Lun: 'L', Mar: 'M', Mer: 'Me', Jeu: 'J', Ven: 'V', Sam: 'S', Dim: 'D' }
 
@@ -61,15 +62,7 @@ export default function Home() {
     user?.email?.split('@')[0] ||
     'Toi'
   const greeting = getGreeting()
-  const onboarding = profile?.settings?.onboarding
-  const onboardingTip =
-    onboarding?.learningStyle?.diagrams &&
-    'Tu aimes les visuels : demande des graphiques pour mieux comprendre.'
-  const onboardingTip2 =
-    onboarding?.levels?.maths >= 4 &&
-    !onboardingTip &&
-    'Tu es à l\'aise en maths : n\'hésite pas à demander des défis.'
-  const personalTip = onboardingTip || onboardingTip2
+  const [quote] = useState(() => getRandomQuote())
   const lastConversation = conversations?.[0]
   const totalCards = (decks ?? []).reduce((s, d) => s + (d.cardCount ?? 0), 0)
   const firstDeckWithCards = (decks ?? []).find((d) => (d.cardCount ?? 0) > 0)
@@ -95,37 +88,22 @@ export default function Home() {
   return (
     <div className="container mx-auto max-w-7xl px-6 py-8 lg:px-12">
       {/* En-tête */}
-      <header className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-text-primary mb-2">
-            {greeting},{' '}
-            <span className="bg-gradient-to-r from-primary to-accent-purple bg-clip-text text-transparent">
-              {displayName}
-            </span>
-          </h1>
-          <p className="text-text-secondary text-lg font-light italic mb-2">
-            Le succès est la somme de petits efforts répétés jour après jour.
+      <header className="mb-10">
+        <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-text-primary mb-3">
+          {greeting},{' '}
+          <span className="bg-gradient-to-r from-primary to-accent-purple bg-clip-text text-transparent">
+            {displayName}
+          </span>
+        </h1>
+        <blockquote className="relative pl-6 border-l-2 border-primary/30">
+          <span className="absolute -left-1 top-0 text-4xl text-primary/25 font-serif leading-none select-none" aria-hidden="true">"</span>
+          <p className="text-text-secondary text-lg font-light italic">
+            {quote.text}
           </p>
-          {personalTip && (
-            <p className="text-sm text-primary font-medium">
-              {personalTip}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface border border-border text-text-secondary hover:text-primary hover:border-primary/30 transition-colors shadow-sm"
-            aria-label="Notifications"
-          >
-            <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
-          </button>
-          <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface border border-border text-text-secondary hover:text-primary hover:border-primary/30 transition-colors shadow-sm"
-            aria-label="Rechercher"
-          >
-            <span className="material-symbols-outlined" aria-hidden="true">search</span>
-          </button>
-        </div>
+          <cite className="not-italic text-sm text-primary/80 font-medium block mt-2">
+            — {quote.author}
+          </cite>
+        </blockquote>
       </header>
 
       {/* Grille */}
