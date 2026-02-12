@@ -97,19 +97,22 @@ export default function Home() {
       {/* En-tête */}
       <header className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-text-primary mb-2">
-            {greeting}, {displayName} 👋
+          <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-text-primary mb-2">
+            {greeting},{' '}
+            <span className="bg-gradient-to-r from-primary to-accent-purple bg-clip-text text-transparent">
+              {displayName}
+            </span>
           </h1>
-          <p className="text-text-secondary text-lg font-light italic">
-            « Le succès est la somme de petits efforts répétés jour après jour. »
+          <p className="text-text-secondary text-lg font-light italic mb-2">
+            Le succès est la somme de petits efforts répétés jour après jour.
           </p>
           {personalTip && (
-            <p className="text-sm text-primary mt-2 font-medium">
+            <p className="text-sm text-primary font-medium">
               {personalTip}
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             className="flex h-10 w-10 items-center justify-center rounded-full bg-surface border border-border text-text-secondary hover:text-primary hover:border-primary/30 transition-colors shadow-sm"
             aria-label="Notifications"
