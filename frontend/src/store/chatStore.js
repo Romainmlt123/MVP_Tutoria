@@ -65,6 +65,18 @@ export const useChatStore = create((set, get) => ({
   currentGraph: null,
   showGraphPanel: false,
   graphVersion: 0,
+  whiteboardContent: [],
+  showWhiteboard: false,
+
+  setWhiteboardContent: (content, action = 'append') =>
+    set((state) => {
+      let next = []
+      if (action === 'replace') next = Array.isArray(content) ? content : [content]
+      else if (action === 'clear') next = []
+      else next = [...state.whiteboardContent, content].filter(Boolean)
+      return { whiteboardContent: next, showWhiteboard: next.length > 0 }
+    }),
+  clearWhiteboard: () => set({ whiteboardContent: [], showWhiteboard: false }),
   isLoading: false,
   error: null,
   conversationsLoading: false,

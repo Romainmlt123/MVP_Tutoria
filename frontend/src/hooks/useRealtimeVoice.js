@@ -46,7 +46,7 @@ export default function useRealtimeVoice() {
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
   const [error, setError] = useState(null)
 
-  const { addMessage, setCurrentGraph } = useChatStore()
+  const { addMessage, setCurrentGraph, setWhiteboardContent, clearWhiteboard } = useChatStore()
 
   const onMessage = useCallback(
     (e) => {
@@ -113,7 +113,15 @@ export default function useRealtimeVoice() {
       }
 
       if (type === 'response.done') {
-        log('✅ response.done', data.response?.output ? 'output présent' : 'pas d\'output', data.response)
+        const resp = data.response
+        const status = resp?.status
+        if (status === 'failed') {
+          const err = resp?.error || resp?.status_details
+          const msg = err?.message ?? err?.code ?? JSON.stringify(err)
+          log('❌ response.done FAILED:', msg, resp)
+          setError(`Réponse IA échouée: ${msg}`)
+        }
+        log('✅ response.done', resp?.output ? 'output présent' : 'pas d\'output', resp)
         setIsAssistantSpeaking(false)
       }
 
@@ -138,6 +146,8 @@ export default function useRealtimeVoice() {
               return false
             }
           })())
+        const isWriteToWhiteboard = fnName === 'write_to_whiteboard'
+
         if (isGenerateGraph && argsStr) {
           log('📊 generate_graph appelé, arguments:', argsStr.slice(0, 200))
           try {
@@ -166,6 +176,32 @@ export default function useRealtimeVoice() {
             dc.send(JSON.stringify({ type: 'response.create' }))
             log('📤 Envoyé: function_call_output + response.create')
           }
+        } else if (isWriteToWhiteboard && argsStr) {
+          log('📝 write_to_whiteboard appelé')
+          try {
+            const { content, action = 'append' } = JSON.parse(argsStr)
+            if (action === 'clear') {
+              setWhiteboardContent('', 'clear')
+            } else if (content && typeof content === 'string') {
+              setWhiteboardContent(content, action)
+            }
+          } catch (err) {
+            console.error('[Realtime] Whiteboard parse error:', err)
+          }
+          if (dc?.readyState === 'open') {
+            dc.send(
+              JSON.stringify({
+                type: 'conversation.item.create',
+                item: {
+                  type: 'function_call_output',
+                  call_id: data.call_id,
+                  output: '{"success":true}',
+                },
+              })
+            )
+            dc.send(JSON.stringify({ type: 'response.create' }))
+            log('📤 Envoyé: function_call_output (whiteboard) + response.create')
+          }
         }
       }
 
@@ -174,7 +210,7 @@ export default function useRealtimeVoice() {
         setError(data.error?.message ?? data.message ?? JSON.stringify(data))
       }
     },
-    [addMessage, setCurrentGraph]
+    [addMessage, setCurrentGraph, setWhiteboardContent]
   )
 
   const connect = useCallback(async () => {
@@ -325,10 +361,11 @@ export default function useRealtimeVoice() {
 
   const disconnect = useCallback(() => {
     cleanup()
+    clearWhiteboard()
     setIsConnected(false)
     setIsSpeaking(false)
     setIsAssistantSpeaking(false)
-  }, [])
+  }, [clearWhiteboard])
 
   return { isConnected, isConnecting, isSpeaking, isAssistantSpeaking, error, connect, disconnect }
 }

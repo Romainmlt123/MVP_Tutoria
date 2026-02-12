@@ -12,7 +12,7 @@ from fastapi.responses import PlainTextResponse, StreamingResponse
 from openai import OpenAI
 from dotenv import load_dotenv
 
-from .config import SYSTEM_PROMPT, REALTIME_INSTRUCTIONS, GRAPH_TOOL_SCHEMA
+from .config import SYSTEM_PROMPT, REALTIME_INSTRUCTIONS, GRAPH_TOOL_SCHEMA, WHITEBOARD_TOOL_SCHEMA
 
 load_dotenv()
 
@@ -210,7 +210,7 @@ async def create_realtime_session(request: Request):
             "type": "realtime",
             "model": "gpt-realtime",
             "instructions": instructions,
-            "tools": [GRAPH_TOOL_SCHEMA],
+            "tools": [GRAPH_TOOL_SCHEMA, WHITEBOARD_TOOL_SCHEMA],
             "audio": {
                 "input": {
                     "turn_detection": {
@@ -267,7 +267,7 @@ async def realtime_connect(request: Request):
         "type": "realtime",
         "model": "gpt-realtime",
         "instructions": REALTIME_INSTRUCTIONS,
-        "tools": [GRAPH_TOOL_SCHEMA],
+        "tools": [GRAPH_TOOL_SCHEMA, WHITEBOARD_TOOL_SCHEMA],
         "audio": {
             "input": {
                 "turn_detection": {

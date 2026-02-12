@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import Logo from '../components/Logo'
 import GraphPanel from '../components/GraphPanel'
+import WhiteboardPanel from '../components/WhiteboardPanel'
 import VoiceBars from '../components/VoiceBars'
 import useRealtimeVoice from '../hooks/useRealtimeVoice'
 import useChatStore from '../store/chatStore'
 
 export default function Voice() {
-  const { showGraphPanel, graphVersion } = useChatStore()
+  const { showGraphPanel, showWhiteboard, graphVersion } = useChatStore()
   const {
     isConnected,
     isConnecting,
@@ -91,17 +92,26 @@ export default function Voice() {
         </div>
       </header>
 
-      {/* Zone principale : graph en grande zone OU écran centré ; zone vocale en bas à droite quand graph */}
+      {/* Zone principale : graph + whiteboard OU écran centré ; zone vocale en bas à droite quand contenu */}
       <main className="relative z-10 flex flex-1 min-h-0 overflow-hidden">
-        {/* Grande zone : graphique (si généré) ou vide pour centrer le bloc vocal */}
-        {showGraphPanel && (
-          <div className="flex-1 min-w-0 flex flex-col overflow-hidden pr-4 pb-4">
-            <GraphPanel key={graphVersion} fill />
+        {/* Grande zone : graphique et/ou tableau blanc (empilés verticalement) */}
+        {(showGraphPanel || showWhiteboard) && (
+          <div className="flex-1 min-w-0 flex flex-col gap-4 overflow-hidden pr-4 pb-4">
+            {showGraphPanel && (
+              <div className="flex-1 min-h-0">
+                <GraphPanel key={graphVersion} fill />
+              </div>
+            )}
+            {showWhiteboard && (
+              <div className={showGraphPanel ? 'shrink-0' : 'flex-1 min-h-0 min-h-[200px]'}>
+                <WhiteboardPanel />
+              </div>
+            )}
           </div>
         )}
 
-        {/* Zone vocale : centrée quand pas de graph (barres au centre comme l'orbe) */}
-        {!showGraphPanel && (
+        {/* Zone vocale : centrée quand pas de graph ni whiteboard */}
+        {!showGraphPanel && !showWhiteboard && (
           <div className="flex flex-1 flex-col items-center justify-center px-4">
             <div className="mb-8 text-center">
               <h2 className="text-xl font-light text-text-primary md:text-2xl lg:text-3xl animate-pulse-slow tracking-wide">
@@ -174,9 +184,9 @@ export default function Voice() {
           </div>
         </div>
 
-        {/* Colonne centre : 5 barres (uniquement quand un graphique est affiché, sinon barres au centre de la page) */}
+        {/* Colonne centre : 5 barres (quand graph ou whiteboard affiché, sinon barres au centre de la page) */}
         <div className="justify-self-center">
-          {showGraphPanel && (
+          {(showGraphPanel || showWhiteboard) && (
             <VoiceBars status={status} assistantSpeaking={isAssistantSpeaking} size="footer" />
           )}
         </div>

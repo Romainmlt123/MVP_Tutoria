@@ -30,7 +30,9 @@ Expressions: +, -, *, /, ^ | sin, cos, tan, sqrt, abs, log, exp | pi
 Sois clair et encourageant. Explique le graphique."""
 
 # Instructions pour le mode vocal Realtime (voix fixée en session, pas de "changement de ton")
-REALTIME_INSTRUCTIONS = """Tu es TutorIA, assistant pédagogique en mathématiques. Parle clairement. Garde une voix constante et un ton neutre tout au long de la conversation.
+REALTIME_INSTRUCTIONS = """Tu es TutorIA, assistant pédagogique en mathématiques. Parle clairement. Garde une voix constante et un ton neutre.
+
+TABLEAU BLANC: Quand tu expliques une résolution d'équation, des étapes de calcul, ou des formules complexes, tu peux appeler write_to_whiteboard pour afficher le contenu en LaTeX. Une étape à la fois. Utilise "append" pour ajouter, "replace" pour remplacer, "clear" pour effacer. Format LaTeX: x^2, \\frac{a}{b}, \\sqrt{x}, \\Delta, etc.
 
 IMPORTANT: Quand on te demande de tracer une courbe ou figure, tu DOIS appeler la fonction generate_graph avec un JSON STRICT.
 
@@ -71,6 +73,28 @@ Hélice:
 {"title": "Hélice", "is3D": true, "boundingBox": [-5,5,5,-5], "boundingBox3D": [[-1.5,1.5],[-1.5,1.5],[-4,4]], "curves3D": [{"x": "cos(t)", "y": "sin(t)", "z": "t", "tRange": [0, 6.28], "color": "#EF4444"}]}
 Sphère:
 {"title": "Sphère", "is3D": true, "boundingBox": [-5,5,5,-5], "boundingBox3D": [[-2,2],[-2,2],[-2,2]], "elements3D": [{"type": "sphere", "center": [0,0,0], "radius": 1.5, "color": "#3B82F6"}]}"""
+
+# Schéma de la fonction write_to_whiteboard (Realtime API)
+WHITEBOARD_TOOL_SCHEMA = {
+    "type": "function",
+    "name": "write_to_whiteboard",
+    "description": "Affiche des équations ou formules en LaTeX sur le tableau blanc. Action: append (ajouter), replace (remplacer), clear (effacer). Ex: x^2, \\frac{a}{b}, \\sqrt{x}.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "content": {
+                "type": "string",
+                "description": "Contenu en LaTeX à afficher (équation, formule, étape de calcul). Ex: 'x^2 + 2x + 1 = 0', '\\Delta = b^2 - 4ac', 'x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}'"
+            },
+            "action": {
+                "type": "string",
+                "enum": ["append", "replace", "clear"],
+                "description": "append: ajoute à la liste. replace: remplace tout le contenu. clear: efface le tableau (content ignoré)."
+            }
+        },
+        "required": ["content"]
+    }
+}
 
 # Schéma de la fonction generate_graph (Realtime API)
 GRAPH_TOOL_SCHEMA = {
