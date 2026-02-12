@@ -3,7 +3,9 @@
  */
 import { useState, useCallback } from 'react'
 import useChatStore from '../store/chatStore'
+import useProfileStore from '../store/profileStore'
 import { normalizeGraphData } from '../utils/graphNormalizer'
+import { buildUserContextForPrompt } from '../utils/onboardingContext'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -246,7 +248,12 @@ export default function useRealtimeVoice() {
         await peerConnection.setLocalDescription(offer)
         log('3/4 Offer SDP créé, récupération token éphémère puis appel direct OpenAI')
 
-        const sessionRes = await fetch(`${API_URL}/api/realtime/session`, { method: 'POST' })
+        const userContext = buildUserContextForPrompt(useProfileStore.getState().profile)
+        const sessionRes = await fetch(`${API_URL}/api/realtime/session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_context: userContext }),
+        })
         if (!sessionRes.ok) {
           const errText = await sessionRes.text()
           log('Erreur session:', sessionRes.status, errText)

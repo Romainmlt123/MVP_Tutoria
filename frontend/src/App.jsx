@@ -15,9 +15,11 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import Onboarding from './pages/Onboarding'
 import NotFound from './pages/NotFound'
 
 const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password']
+const ONBOARDING_PATH = '/onboarding'
 
 function ProtectedRoute({ children }) {
   const location = useLocation()
@@ -59,6 +61,7 @@ export default function App() {
       <Route path="/signup" element={<ProtectedRoute><Signup /></ProtectedRoute>} />
       <Route path="/forgot-password" element={<ProtectedRoute><ForgotPassword /></ProtectedRoute>} />
       <Route path="/reset-password" element={<ProtectedRoute><ResetPassword /></ProtectedRoute>} />
+      <Route path={ONBOARDING_PATH} element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
       <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route path="/" element={<Home />} />
         <Route path="/chat" element={<Chat />} />

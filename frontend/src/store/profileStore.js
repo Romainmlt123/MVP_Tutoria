@@ -34,6 +34,15 @@ export const useProfileStore = create((set, get) => ({
     return { data, error }
   },
 
+  /** Sauvegarde l'onboarding en fusionnant avec settings existants. Met à jour display_name. */
+  updateOnboarding: async (userId, onboardingData) => {
+    if (!supabase || !userId) return { error: { message: 'Non autorisé' } }
+    const { profile } = get()
+    const settings = { ...(profile?.settings || {}), onboarding: onboardingData }
+    const displayName = [onboardingData.firstName, onboardingData.lastName].filter(Boolean).join(' ') || profile?.display_name
+    return get().updateProfile(userId, { settings, display_name: displayName || undefined })
+  },
+
   clearProfile: () => set({ profile: null, error: null }),
 }))
 

@@ -59,11 +59,43 @@ async def health():
     return {"status": "ok", "service": "TutorIA"}
 
 
+def build_system_prompt(user_context: str | None) -> str:
+    """Préfixe le prompt système avec le contexte utilisateur (onboarding) si fourni."""
+    base = SYSTEM_PROMPT
+    if not user_context or not user_context.strip():
+        return base
+    return base + "\n\n[Contexte de l'élève]\n" + user_context.strip()
+
+
+def generate_conversation_title(client: OpenAI, first_message: str) -> str | None:
+    """Génère un titre court (résumé) pour la conversation à partir du premier message."""
+    if not first_message or len(first_message.strip()) < 3:
+        return None
+    try:
+        msg = first_message.strip()[:500]
+        resp = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Tu génères un titre très court (5-8 mots max, en français) pour une conversation qui commence par ce message. Réponds UNIQUEMENT par le titre, sans guillemets ni ponctuation finale.",
+                },
+                {"role": "user", "content": msg},
+            ],
+            temperature=0.3,
+            max_tokens=30,
+        )
+        title = (resp.choices[0].message.content or "").strip()
+        return title[:80] if title else None
+    except Exception:
+        return None
+
+
 @app.post("/api/chat")
 async def chat(request: dict):
     """
     Chat texte avec GPT-4o.
-    Body: { "messages": [ { "role": "user"|"assistant", "content": "..." }, ... ] }
+    Body: { "messages": [...], "user_context": "..." (optionnel, issu de l'onboarding) }
     Réponse: { "content": "...", "graph": {...} | null }
     """
     client, _ = get_openai_client()
@@ -72,31 +104,54 @@ async def chat(request: dict):
     if not messages:
         raise HTTPException(status_code=400, detail="Messages requis")
 
+    user_context = request.get("user_context")
+    system_content = build_system_prompt(user_context)
+
     response = client.chat.completions.create(
         model="gpt-4o",
-        messages=[{"role": "system", "content": SYSTEM_PROMPT}] + messages,
+        messages=[{"role": "system", "content": system_content}] + messages,
         temperature=0.7,
         max_tokens=2000,
     )
 
     content = response.choices[0].message.content
-    return {"content": content, "graph": extract_graph(content)}
+    graph = extract_graph(content)
+
+    # Titre de conversation : résumé du premier message (si c'est le premier échange)
+    suggested_title = None
+    if len(messages) == 1 and messages[0].get("role") == "user":
+        first_content = messages[0].get("content") or ""
+        if isinstance(first_content, str):
+            suggested_title = generate_conversation_title(client, first_content)
+        else:
+            suggested_title = None
+
+    return {"content": content, "graph": graph, "suggested_title": suggested_title}
 
 
 @app.post("/api/realtime/session")
-async def create_realtime_session():
+async def create_realtime_session(request: Request):
     """
     Crée une session OpenAI Realtime (token éphémère pour WebRTC).
-    Le client utilisera cette clé pour appeler directement api.openai.com/v1/realtime/calls avec le SDP.
+    Body optionnel: { "user_context": "..." } (contexte onboarding pour personnaliser la voix).
     Réponse: { "success": true, "client_secret": { "value": "...", "expires_at": ... } }
     """
     _, api_key = get_openai_client()
+    try:
+        raw = await request.body()
+        body = json.loads(raw) if raw and raw.strip() else {}
+    except Exception:
+        body = {}
+    user_context = body.get("user_context") or ""
+    instructions = REALTIME_INSTRUCTIONS
+    if user_context and isinstance(user_context, str) and user_context.strip():
+        instructions = instructions + "\n\n[Contexte de l'élève]\n" + user_context.strip()
 
     session_config = {
         "session": {
             "type": "realtime",
             "model": "gpt-realtime",
-            "instructions": REALTIME_INSTRUCTIONS,
+            "instructions": instructions,
             "tools": [GRAPH_TOOL_SCHEMA],
             "audio": {
                 "input": {

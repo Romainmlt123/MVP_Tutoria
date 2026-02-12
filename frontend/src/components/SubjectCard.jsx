@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
 import { gradientCardColors } from '../utils/colors'
 
-export default function SubjectCard({ name, subtitle, icon, color, slug }) {
+export default function SubjectCard({ name, subtitle, icon, color, slug, to }) {
   const c = gradientCardColors[color] || gradientCardColors.blue
+  const href = to ?? `/chat?subject=${encodeURIComponent(slug || name)}`
 
   return (
     <Link
-      to={`/chat?subject=${encodeURIComponent(slug || name)}`}
+      to={href}
       className={`relative overflow-hidden rounded-2xl p-6 cursor-pointer block group transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${c.bg} ${c.shadow} shadow-lg text-white`}
       aria-label={`${name} — ${subtitle}`}
     >

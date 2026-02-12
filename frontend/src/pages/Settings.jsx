@@ -7,6 +7,7 @@ import { personas } from '../data/mockData'
 import useAuthStore from '../store/authStore'
 import useProfileStore from '../store/profileStore'
 import useUserSettingsStore from '../store/userSettingsStore'
+import { SUBJECT_LABELS, LEVEL_LABELS, LEARNING_LABELS } from '../utils/onboardingContext'
 
 const settingsNav = [
   { icon: 'person', label: 'Profil', id: 'profile' },
@@ -157,6 +158,80 @@ export default function Settings() {
                         Profil enregistré.
                       </p>
                     )}
+                  </div>
+                </section>
+
+                {/* Profil d'apprentissage (onboarding) */}
+                <section className="space-y-6" aria-labelledby="onboarding-heading">
+                  <div className="flex items-center justify-between gap-4 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary" aria-hidden="true">school</span>
+                      <h3 id="onboarding-heading" className="text-xl font-bold text-text-primary">Profil d&apos;apprentissage</h3>
+                    </div>
+                    <Link
+                      to="/onboarding"
+                      className="text-sm font-medium text-primary hover:text-primary-dark flex items-center gap-1 shrink-0"
+                    >
+                      Modifier
+                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </Link>
+                  </div>
+                  <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+                    {profile?.settings?.onboarding?.completed ? (
+                      <>
+                        {(profile.settings.onboarding.firstName || profile.settings.onboarding.lastName) && (
+                          <div>
+                            <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-1">Identité</p>
+                            <p className="text-text-primary font-medium">
+                              {[profile.settings.onboarding.firstName, profile.settings.onboarding.lastName].filter(Boolean).join(' ') || '—'}
+                            </p>
+                          </div>
+                        )}
+                        {profile.settings.onboarding.levels && Object.keys(profile.settings.onboarding.levels).length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">Niveaux par matière</p>
+                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {Object.entries(profile.settings.onboarding.levels).map(([id, level]) => (
+                                <li key={id} className="flex justify-between items-center py-1.5 border-b border-border last:border-0">
+                                  <span className="text-text-primary">{SUBJECT_LABELS[id] ?? id}</span>
+                                  <span className="text-primary font-medium text-sm bg-primary/10 px-2 py-0.5 rounded">
+                                    {LEVEL_LABELS[level] ?? level}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {profile.settings.onboarding.learningStyle && Object.keys(profile.settings.onboarding.learningStyle).length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">J&apos;aime apprendre avec</p>
+                            <ul className="flex flex-wrap gap-2">
+                              {Object.entries(profile.settings.onboarding.learningStyle)
+                                .filter(([, v]) => v === true)
+                                .map(([id]) => (
+                                  <li key={id}>
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-3 py-1.5 text-sm font-medium">
+                                      <span className="material-symbols-outlined text-[16px]">check</span>
+                                      {LEARNING_LABELS[id] ?? id}
+                                    </span>
+                                  </li>
+                                ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-text-secondary text-sm">
+                        Tu n&apos;as pas encore rempli ton profil d&apos;apprentissage. Cela permet à Tutor&apos;IA d&apos;adapter ses explications à ton niveau et à tes préférences.
+                      </p>
+                    )}
+                    <Link
+                      to="/onboarding"
+                      className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-dark"
+                    >
+                      {profile?.settings?.onboarding?.completed ? 'Modifier mon profil d\'apprentissage' : 'Compléter mon profil d\'apprentissage'}
+                      <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </Link>
                   </div>
                 </section>
               </>

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import ChatHistory from '../components/ChatHistory'
 import ChatMessage from '../components/ChatMessage'
 import ChatInput from '../components/ChatInput'
@@ -8,6 +8,7 @@ import useAuthStore from '../store/authStore'
 
 export default function Chat() {
   const { user } = useAuthStore()
+  const location = useLocation()
   const [historyOpen, setHistoryOpen] = useState(false)
   const {
     conversations,
@@ -24,6 +25,12 @@ export default function Chat() {
   useEffect(() => {
     if (user?.id) fetchConversations(user.id)
   }, [user?.id, fetchConversations])
+
+  // Ouvrir une conversation depuis la Home (état passé au lien)
+  useEffect(() => {
+    const openId = location.state?.openConversationId
+    if (openId && user?.id) loadConversation(openId)
+  }, [location.state?.openConversationId, user?.id, loadConversation])
 
   const handleSend = useCallback(
     (text) => {

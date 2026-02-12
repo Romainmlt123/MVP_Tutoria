@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { NavLink, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import Logo from './Logo'
 import useAuthStore from '../store/authStore'
 import useProfileStore from '../store/profileStore'
@@ -125,11 +125,14 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Bas : profil + déconnexion (Paramètres retiré pour laisser plus de place à l'historique) */}
+      {/* Bas : profil + déconnexion */}
       <div className="mt-auto flex flex-col gap-2 shrink-0 pt-4 border-t border-border">
-        {/* Profil + Déconnexion */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
+          <Link
+            to="/settings"
+            className="flex items-center gap-3 rounded-xl px-2 py-2 -mx-2 hover:bg-primary/5 transition-colors group"
+            aria-label="Ouvrir les paramètres et profil"
+          >
             {avatarUrl ? (
               <img src={avatarUrl} alt={displayName} className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/20 shrink-0" />
             ) : (
@@ -137,11 +140,12 @@ export default function Sidebar() {
                 <span className="material-symbols-outlined text-primary text-[20px]">person</span>
               </div>
             )}
-            <div className="overflow-hidden min-w-0">
-              <p className="truncate text-sm font-medium text-text-primary">{displayName}</p>
+            <div className="overflow-hidden min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-text-primary group-hover:text-primary">{displayName}</p>
               <p className="truncate text-xs text-text-secondary">{user?.email || displayRole}</p>
             </div>
-          </div>
+            <span className="material-symbols-outlined text-text-muted group-hover:text-primary text-[20px] shrink-0" aria-hidden="true">chevron_right</span>
+          </Link>
           {user && (
             <button
               type="button"

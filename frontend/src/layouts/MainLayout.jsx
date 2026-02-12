@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import BottomNav from '../components/BottomNav'
 import useAuthStore from '../store/authStore'
@@ -7,9 +7,10 @@ import useProfileStore from '../store/profileStore'
 import useUserSettingsStore from '../store/userSettingsStore'
 
 export default function MainLayout() {
+  const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const resendConfirmationEmail = useAuthStore((s) => s.resendConfirmationEmail)
-  const fetchProfile = useProfileStore((s) => s.fetchProfile)
+  const { profile, fetchProfile } = useProfileStore()
   const fetchSettings = useUserSettingsStore((s) => s.fetchSettings)
   const [resendLoading, setResendLoading] = useState(false)
   const [resendDone, setResendDone] = useState(false)
@@ -23,6 +24,12 @@ export default function MainLayout() {
       fetchSettings(user.id)
     }
   }, [user?.id, fetchProfile, fetchSettings])
+
+  useEffect(() => {
+    if (profile && !profile?.settings?.onboarding?.completed) {
+      navigate('/onboarding', { replace: true })
+    }
+  }, [profile, navigate])
 
   const handleResend = async () => {
     if (!user?.email || resendLoading) return

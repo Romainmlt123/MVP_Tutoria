@@ -30,14 +30,9 @@ Dans **Settings** du projet Vercel → **Environment Variables**, ajoute :
 |-----|--------|----------------|
 | `VITE_SUPABASE_URL` | `https://xxxxx.supabase.co` (ton URL Supabase) | Production, Preview |
 | `VITE_SUPABASE_ANON_KEY` | `eyJ...` (ta clé anon Supabase) | Production, Preview |
+| `VITE_API_URL` | URL publique de ton backend (voir ci‑dessous) | Production, Preview |
 
-Optionnel (si tu déploies le backend Python ailleurs) :
-
-| Nom | Valeur |
-|-----|--------|
-| `VITE_API_URL` | `https://ton-backend.railway.app` (ou autre) |
-
-Sans `VITE_API_URL`, le frontend utilisera `http://localhost:8000` en dev ; en prod, le chat IA et la voix ne marcheront que si tu as déployé le backend et défini cette variable.
+**À propos de `VITE_API_URL`** (chat, graphiques, voix) : sans cette variable, le build garde le fallback `http://localhost:8000`. En prod, le navigateur bloquera les requêtes vers localhost avec une erreur CORS / *"Permission was denied for this request to access the loopback address space"*. Déploie d’abord le backend (dossier `backend/`) sur Railway, Render, Fly.io, etc., puis ajoute ici l’URL de l’API. Après modification, fais un **Redeploy** du projet sur Vercel.
 
 ---
 
@@ -53,7 +48,7 @@ Une fois le build terminé, Vercel te donne une URL du type `https://mvp-tutoria
 ## 5. Récap
 
 - **Root Directory** = `frontend`.
-- **Variables** = `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` (obligatoires pour auth + BDD).
+- **Variables** = `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` et `VITE_API_URL` (obligatoire pour chat / graphiques / voix en prod).
 - Le fichier `frontend/vercel.json` configure les rewrites pour que React Router gère toutes les routes (SPA).
 
 Tu peux partager l’URL de production pour que d’autres testent et donnent des retours.

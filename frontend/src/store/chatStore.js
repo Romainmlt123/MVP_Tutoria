@@ -1,8 +1,14 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { normalizeGraphData } from '../utils/graphNormalizer'
+import { buildUserContextForPrompt } from '../utils/onboardingContext'
+import useProfileStore from './profileStore'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+function getUserContext() {
+  return buildUserContextForPrompt(useProfileStore.getState().profile)
+}
 
 export const useChatStore = create((set, get) => ({
   conversations: [],
@@ -101,7 +107,7 @@ export const useChatStore = create((set, get) => ({
         const res = await fetch(`${API_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: history }),
+          body: JSON.stringify({ messages: history, user_context: getUserContext() }),
         })
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
@@ -152,7 +158,7 @@ export const useChatStore = create((set, get) => ({
       const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, user_context: getUserContext() }),
       })
 
       if (!res.ok) {
@@ -185,7 +191,9 @@ export const useChatStore = create((set, get) => ({
 
       if (normalizedGraph) setCurrentGraph({ data: normalizedGraph })
 
-      const titleUpdate = messages.length === 0 ? (text.slice(0, 80) || 'Nouvelle conversation') : null
+      const titleUpdate = messages.length === 0
+        ? (data.suggested_title || text.slice(0, 80) || 'Nouvelle conversation')
+        : null
       if (titleUpdate) {
         await supabase
           .from('conversations')

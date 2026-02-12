@@ -1,3 +1,7 @@
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
 import { user } from '../data/mockData'
 import CodeBlock from './CodeBlock'
 import GraphPanel from './GraphPanel'
@@ -10,19 +14,35 @@ function stripJsxGraphBlock(text) {
   return out || ''
 }
 
-function renderWithCode(text) {
-  const parts = text.split(/(<code>.*?<\/code>)/g)
-  return parts.map((part, i) => {
-    const match = part.match(/^<code>(.*?)<\/code>$/)
-    if (match) {
+/** Convertit \( \) et \[ \] en $ et $$ pour compatibilité remark-math */
+function convertLatexDelimiters(text) {
+  if (!text || typeof text !== 'string') return text
+  return text
+    .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$')
+    .replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$')
+}
+
+const markdownComponents = {
+  h1: ({ children }) => <h1 className="text-xl font-bold mt-6 mb-2 first:mt-0">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-lg font-bold mt-5 mb-2">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-base font-bold mt-4 mb-2">{children}</h3>,
+  p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1 marker:text-primary">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
+  li: ({ children }) => <li className="leading-7">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  code: ({ children, className }) => {
+    const isInline = !className
+    if (isInline) {
       return (
-        <code key={`code-${i}`} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-sm font-mono">
-          {match[1]}
+        <code className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-sm font-mono">
+          {children}
         </code>
       )
     }
-    return <span key={`text-${i}`}>{part}</span>
-  })
+    return <code className="block p-4 bg-slate-800 text-slate-300 rounded-lg overflow-x-auto font-mono text-sm">{children}</code>
+  },
+  pre: ({ children }) => <pre className="mb-3 overflow-x-auto">{children}</pre>,
 }
 
 export default function ChatMessage({ message }) {
@@ -50,8 +70,14 @@ export default function ChatMessage({ message }) {
           <span className="text-sm font-bold text-text-primary">Tutor&apos;IA</span>
           <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide">PRO</span>
         </div>
-        <div className="text-text-primary text-[15px] leading-7 space-y-4">
-          <p>{renderWithCode(stripJsxGraphBlock(message.content))}</p>
+        <div className="text-text-primary text-[15px] leading-7 space-y-4 [&_.katex]:text-[1.05em]">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+            components={markdownComponents}
+          >
+            {convertLatexDelimiters(stripJsxGraphBlock(message.content))}
+          </ReactMarkdown>
 
           {message.graph && (
             <div className="mt-4">

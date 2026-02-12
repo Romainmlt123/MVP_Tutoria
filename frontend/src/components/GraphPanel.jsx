@@ -338,12 +338,13 @@ const GraphPanel = ({ graphData: graphDataProp, inline = false, fullScreen = fal
     const showAxis = graphData.showAxis !== false
     const showGrid = graphData.showGrid !== false
 
+    const isEmbedded = inline || fill
     const board = JXG.JSXGraph.initBoard(containerRef.current.id, {
       boundingbox: boundingBox,
       axis: showAxis,
       grid: showGrid,
       showCopyright: false,
-      showNavigation: true,
+      showNavigation: !isEmbedded,
       pan: { enabled: true },
       zoom: { enabled: true, wheel: true }
     })
@@ -797,65 +798,56 @@ const GraphPanel = ({ graphData: graphDataProp, inline = false, fullScreen = fal
 
   if (!graphData) return null
 
+  const isEmbedded = inline || fill
+
   const wrapperClass = inline
-    ? 'w-full max-w-2xl bg-surface border border-border rounded-xl flex flex-col shadow-md overflow-hidden'
+    ? 'w-full max-w-2xl flex flex-col overflow-hidden rounded-lg'
     : fullScreen
       ? 'w-full h-full flex flex-col bg-surface shadow-inner overflow-hidden'
       : fill
-        ? 'w-full min-w-0 flex-1 flex flex-col bg-surface border border-border rounded-xl shadow-lg overflow-hidden'
+        ? 'w-full min-w-0 flex-1 flex flex-col overflow-hidden rounded-lg'
         : 'w-[500px] bg-surface border-l border-border flex flex-col flex-shrink-0 shadow-lg'
 
   return (
     <div className={wrapperClass}>
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <h3 className="font-semibold text-text-primary flex items-center gap-2">
-          <span className="text-primary">📊</span>
-          {inline ? (graphData.title || 'Visualisation') : 'Visualisation'}
-        </h3>
-        {!inline && (
-          <button
-            onClick={closeGraphPanel}
-            className="flex items-center gap-2 py-1.5 px-3 rounded-lg text-text-muted hover:bg-primary/5 transition-all"
-            aria-label={closeLabel || 'Fermer le graphique'}
-          >
-            {closeLabel && <span className="text-sm font-medium text-text-secondary">{closeLabel}</span>}
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        )}
-      </div>
-
-      {/* Titre du graphique (si pas déjà dans le header en inline) */}
-      {!inline && graphData.title && (
-        <div className="px-4 py-2 bg-primary/5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-text-primary">{graphData.title}</p>
-            {is3D && (
-              <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full">
-                3D
-              </span>
-            )}
+      {/* Header (masqué en mode intégré pour un rendu plus pro) */}
+      {!isEmbedded && (
+        <>
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h3 className="font-semibold text-text-primary flex items-center gap-2">
+              <span className="text-primary">📊</span>
+              Visualisation
+            </h3>
+            <button
+              onClick={closeGraphPanel}
+              className="flex items-center gap-2 py-1.5 px-3 rounded-lg text-text-muted hover:bg-primary/5 transition-all"
+              aria-label={closeLabel || 'Fermer le graphique'}
+            >
+              {closeLabel && <span className="text-sm font-medium text-text-secondary">{closeLabel}</span>}
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
           </div>
-          {graphData.description && (
-            <p className="text-xs text-text-secondary mt-0.5">{graphData.description}</p>
+
+          {graphData.title && (
+            <div className="px-4 py-2 bg-primary/5 border-b border-border">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-text-primary">{graphData.title}</p>
+                {is3D && (
+                  <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full">
+                    3D
+                  </span>
+                )}
+              </div>
+              {graphData.description && (
+                <p className="text-xs text-text-secondary mt-0.5">{graphData.description}</p>
+              )}
+            </div>
           )}
-        </div>
-      )}
-      {inline && graphData.title && (
-        <div className="px-4 py-1.5 flex items-center gap-2">
-          {is3D && (
-            <span className="px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full">
-              3D
-            </span>
-          )}
-          {graphData.description && (
-            <p className="text-xs text-text-secondary">{graphData.description}</p>
-          )}
-        </div>
+        </>
       )}
 
       {/* Zone du graphique JSXGraph */}
-      <div className={`flex-1 p-4 flex items-center justify-center overflow-hidden bg-background min-h-0 ${inline ? 'min-h-[280px]' : ''} ${fullScreen ? 'min-h-0' : ''}`}>
+      <div className={`flex-1 flex items-center justify-center overflow-hidden min-h-0 ${inline ? 'min-h-[280px] p-2' : fill ? 'p-2' : 'p-4'} ${fullScreen ? 'min-h-0 p-4' : ''}`}>
         {error ? (
           <div className="text-red-500 text-center p-4">
             <p>{error}</p>
@@ -864,23 +856,25 @@ const GraphPanel = ({ graphData: graphDataProp, inline = false, fullScreen = fal
           <div
             id={containerId}
             ref={containerRef}
-            className={`w-full h-full rounded-lg border border-border bg-surface shadow-sm ${inline ? 'min-h-[260px]' : fullScreen ? 'min-h-[300px]' : 'min-h-[400px]'}`}
+            className={`w-full h-full rounded-lg bg-surface ${inline ? 'min-h-[260px]' : fullScreen ? 'min-h-[300px]' : 'min-h-[400px]'} ${!isEmbedded ? 'border border-border shadow-sm' : ''}`}
           />
         )}
       </div>
 
-      {/* Instructions */}
-      <div className="px-4 py-2 bg-primary/5 border-t border-border">
-        <p className="text-xs text-text-secondary">
-          {is3D 
-            ? "💡 Clic + Glisser = Rotation 3D | Molette = Zoom | Shift + Glisser = Déplacer"
-            : "💡 Molette = Zoom | Clic + Glisser = Déplacer | Double-clic = Réinitialiser"
-          }
-        </p>
-      </div>
+      {/* Instructions (masquées en mode intégré) */}
+      {!isEmbedded && (
+        <div className="px-4 py-2 bg-primary/5 border-t border-border">
+          <p className="text-xs text-text-secondary">
+            {is3D 
+              ? "💡 Clic + Glisser = Rotation 3D | Molette = Zoom | Shift + Glisser = Déplacer"
+              : "💡 Molette = Zoom | Clic + Glisser = Déplacer | Double-clic = Réinitialiser"
+            }
+          </p>
+        </div>
+      )}
 
       {/* Actions (masquées en inline pour garder le message compact) */}
-      {!inline && (
+      {!inline && !fill && (
         <div className="p-4 border-t border-border flex gap-2">
           <button
             onClick={handleReset}
