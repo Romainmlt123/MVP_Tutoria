@@ -94,16 +94,16 @@ export default function Voice() {
 
       {/* Zone principale : graph + whiteboard OU écran centré ; zone vocale en bas à droite quand contenu */}
       <main className="relative z-10 flex flex-1 min-h-0 overflow-hidden">
-        {/* Grande zone : graphique et/ou tableau blanc (empilés verticalement) */}
+        {/* Grande zone : graphique à gauche, tableau blanc à droite (quand les deux sont utilisés) */}
         {(showGraphPanel || showWhiteboard) && (
-          <div className="flex-1 min-w-0 flex flex-col gap-4 overflow-hidden pr-4 pb-4">
+          <div className="flex-1 min-w-0 flex flex-col md:flex-row gap-4 overflow-hidden pr-4 pb-4">
             {showGraphPanel && (
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-w-0 min-h-0 flex flex-col">
                 <GraphPanel key={graphVersion} fill />
               </div>
             )}
             {showWhiteboard && (
-              <div className={showGraphPanel ? 'shrink-0' : 'flex-1 min-h-0 min-h-[200px]'}>
+              <div className="flex flex-col flex-1 min-w-0 min-h-0">
                 <WhiteboardPanel />
               </div>
             )}
