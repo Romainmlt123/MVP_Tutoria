@@ -32,7 +32,7 @@ export default function ChatInput({ onSend, disabled }) {
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-30 flex justify-center pointer-events-none">
+    <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 pt-6 z-30 flex justify-center pointer-events-none bg-background">
       <div className="w-full max-w-3xl pointer-events-auto">
         <form
           onSubmit={handleSubmit}

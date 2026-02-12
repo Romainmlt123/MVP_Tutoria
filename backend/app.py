@@ -8,7 +8,7 @@ import httpx
 import uuid
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -127,6 +127,64 @@ async def chat(request: dict):
             suggested_title = None
 
     return {"content": content, "graph": graph, "suggested_title": suggested_title}
+
+
+def _stream_chat_generator(request: dict):
+    """Générateur pour le streaming SSE du chat."""
+    client, _ = get_openai_client()
+    messages = request.get("messages", [])
+    if not messages:
+        yield f"data: {json.dumps({'error': 'Messages requis'})}\n\n"
+        return
+
+    user_context = request.get("user_context")
+    system_content = build_system_prompt(user_context)
+
+    try:
+        stream = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": system_content}] + messages,
+            temperature=0.7,
+            max_tokens=2000,
+            stream=True,
+        )
+        full_content = []
+        for chunk in stream:
+            delta = chunk.choices[0].delta if chunk.choices else None
+            if delta and getattr(delta, "content", None):
+                text = delta.content
+                full_content.append(text)
+                yield f"data: {json.dumps({'content': text})}\n\n"
+
+        content = "".join(full_content)
+        graph = extract_graph(content)
+        suggested_title = None
+        if len(messages) == 1 and messages[0].get("role") == "user":
+            first_content = messages[0].get("content") or ""
+            if isinstance(first_content, str):
+                suggested_title = generate_conversation_title(client, first_content)
+
+        yield f"data: {json.dumps({'done': True, 'graph': graph, 'suggested_title': suggested_title})}\n\n"
+    except Exception as e:
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(request: dict):
+    """
+    Chat texte avec GPT-4o en streaming (SSE).
+    Body: { "messages": [...], "user_context": "..." (optionnel) }
+    Réponse: flux SSE (data: {"content": "chunk"} ou data: {"done": true, "graph": ..., "suggested_title": ...})
+    """
+    return StreamingResponse(
+        _stream_chat_generator(request),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @app.post("/api/realtime/session")

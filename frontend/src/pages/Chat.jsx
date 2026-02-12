@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import ChatHistory from '../components/ChatHistory'
 import ChatMessage from '../components/ChatMessage'
@@ -51,6 +51,13 @@ export default function Chat() {
     },
     [loadConversation]
   )
+
+  const scrollRef = useRef(null)
+  useEffect(() => {
+    if (isLoading && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages, isLoading])
 
   return (
     <div className="flex h-full w-full bg-gradient-to-b from-slate-50 via-white to-primary/[0.04] font-display text-text-primary antialiased overflow-hidden relative">
@@ -113,8 +120,8 @@ export default function Chat() {
         </header>
 
         {/* Zone de chat */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth z-10 min-w-0 bg-transparent">
-          <div className="max-w-3xl mx-auto flex flex-col gap-8 pb-32">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth z-10 min-w-0 bg-transparent">
+          <div className="max-w-3xl mx-auto flex flex-col gap-8 pb-56">
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px]">error</span>
@@ -131,7 +138,7 @@ export default function Chat() {
             {messages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} />
             ))}
-            {isLoading && (
+            {isLoading && (messages.length === 0 || messages[messages.length - 1].role === 'user') && (
               <div className="flex items-center gap-2 text-text-secondary text-sm">
                 <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
                 Tutor&apos;IA réfléchit...

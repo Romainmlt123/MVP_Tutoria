@@ -70,14 +70,18 @@ export default function ChatMessage({ message }) {
           <span className="text-sm font-bold text-text-primary">Tutor&apos;IA</span>
           <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide">PRO</span>
         </div>
-        <div className="text-text-primary text-[15px] leading-7 space-y-4 [&_.katex]:text-[1.05em]">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeKatex]}
-            components={markdownComponents}
-          >
-            {convertLatexDelimiters(stripJsxGraphBlock(message.content))}
-          </ReactMarkdown>
+        <div className="text-text-primary text-[15px] leading-7 space-y-4 pb-4 [&_.katex]:text-[1.05em]">
+          {message.content ? (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+              components={markdownComponents}
+            >
+              {convertLatexDelimiters(stripJsxGraphBlock(message.content))}
+            </ReactMarkdown>
+          ) : (
+            <span className="inline-block text-text-muted animate-pulse">...</span>
+          )}
 
           {message.graph && (
             <div className="mt-4">

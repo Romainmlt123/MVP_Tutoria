@@ -10,6 +10,54 @@ function getUserContext() {
   return buildUserContextForPrompt(useProfileStore.getState().profile)
 }
 
+async function consumeStream(response, onChunk, onDone) {
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let fullContent = ''
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      let idx
+      while ((idx = buffer.indexOf('\n\n')) !== -1) {
+        const event = buffer.slice(0, idx)
+        buffer = buffer.slice(idx + 2)
+        if (event.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(event.slice(6))
+            if (data.error) {
+              onDone({ error: data.error })
+              return
+            }
+            if (data.content) {
+              fullContent += data.content
+              onChunk(fullContent)
+            }
+            if (data.done) {
+              onDone({ graph: data.graph, suggested_title: data.suggested_title })
+              return
+            }
+          } catch (_) {}
+        }
+      }
+    }
+    if (buffer.startsWith('data: ')) {
+      try {
+        const data = JSON.parse(buffer.slice(6))
+        if (data.content) {
+          fullContent += data.content
+          onChunk(fullContent)
+        }
+        if (data.done) onDone({ graph: data.graph, suggested_title: data.suggested_title })
+      } catch (_) {}
+    }
+  } finally {
+    reader.releaseLock()
+  }
+}
+
 export const useChatStore = create((set, get) => ({
   conversations: [],
   currentConversationId: null,
@@ -94,29 +142,68 @@ export const useChatStore = create((set, get) => ({
       ],
     })),
 
+  updateMessageContent: (messageId, content) =>
+    set((state) => ({
+      messages: state.messages.map((m) =>
+        m.id === messageId ? { ...m, content } : m
+      ),
+    })),
+
   sendMessage: async (text, userId) => {
-    const { messages, currentConversationId, addMessageLocal, setCurrentGraph, setError, createConversation, fetchConversations } = get()
+    const {
+      messages,
+      currentConversationId,
+      addMessageLocal,
+      updateMessageContent,
+      setCurrentGraph,
+      setError,
+      createConversation,
+      fetchConversations,
+    } = get()
     let conversationId = currentConversationId
+
+    const history = messages.map((m) => ({ role: m.role, content: m.content }))
+    history.push({ role: 'user', content: text })
+
+    const streamAssistant = async () => {
+      const assistantId = `msg-stream-${Date.now()}`
+      addMessageLocal({ role: 'assistant', id: assistantId, content: '' })
+
+      const res = await fetch(`${API_URL}/api/chat/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history, user_context: getUserContext() }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || err.error || `Erreur ${res.status}`)
+      }
+
+      return new Promise((resolve, reject) => {
+        consumeStream(
+          res,
+          (content) => updateMessageContent(assistantId, content),
+          async (meta) => {
+            if (meta?.error) {
+              setError(meta.error)
+              updateMessageContent(assistantId, `❌ Erreur : ${meta.error}`)
+              reject(new Error(meta.error))
+              return
+            }
+            const normalizedGraph = meta?.graph ? normalizeGraphData(meta.graph) : null
+            if (normalizedGraph) setCurrentGraph({ data: normalizedGraph })
+            resolve({ graph: meta?.graph, suggested_title: meta?.suggested_title })
+          }
+        ).catch(reject)
+      })
+    }
 
     if (!supabase) {
       addMessageLocal({ role: 'user', content: text })
       set({ isLoading: true, error: null })
-      const history = messages.map((m) => ({ role: m.role, content: m.content }))
-      history.push({ role: 'user', content: text })
       try {
-        const res = await fetch(`${API_URL}/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: history, user_context: getUserContext() }),
-        })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          throw new Error(err.detail || `Erreur ${res.status}`)
-        }
-        const data = await res.json()
-        const normalizedGraph = data.graph ? normalizeGraphData(data.graph) : null
-        addMessageLocal({ role: 'assistant', content: data.content, graph: normalizedGraph })
-        if (normalizedGraph) get().setCurrentGraph({ data: normalizedGraph })
+        await streamAssistant()
       } catch (err) {
         setError(err.message)
         get().addMessageLocal({ role: 'assistant', content: `❌ Erreur : ${err.message}` })
@@ -143,9 +230,6 @@ export const useChatStore = create((set, get) => ({
     addMessageLocal({ role: 'user', content: text })
     set({ isLoading: true, error: null })
 
-    const history = messages.map((m) => ({ role: m.role, content: m.content }))
-    history.push({ role: 'user', content: text })
-
     const { error: insertUserErr } = await supabase
       .from('messages')
       .insert({ conversation_id: conversationId, role: 'user', content: text })
@@ -155,44 +239,35 @@ export const useChatStore = create((set, get) => ({
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history, user_context: getUserContext() }),
-      })
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.detail || `Erreur ${res.status}`)
-      }
-
-      const data = await res.json()
-      const normalizedGraph = data.graph ? normalizeGraphData(data.graph) : null
+      const meta = await streamAssistant()
+      const fullContent = get().messages.find((m) => m.id?.startsWith('msg-stream-'))?.content ?? ''
+      const normalizedGraph = meta?.graph ? normalizeGraphData(meta.graph) : null
 
       const { data: insertedMsg, error: insertAssistErr } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
           role: 'assistant',
-          content: data.content,
-          graph: data.graph ?? null,
+          content: fullContent,
+          graph: meta?.graph ?? null,
         })
         .select('id, role, content, graph, created_at')
         .single()
 
-      if (insertAssistErr) {
-        addMessageLocal({ role: 'assistant', content: data.content, graph: normalizedGraph })
-      } else {
-        addMessageLocal({
-          ...insertedMsg,
-          graph: insertedMsg?.graph ? normalizeGraphData(insertedMsg.graph) : null,
-        })
-      }
+      const finalMsg = insertAssistErr
+        ? { id: `msg-${Date.now()}`, role: 'assistant', content: fullContent, graph: normalizedGraph }
+        : { ...insertedMsg, graph: normalizedGraph }
+
+      set((state) => ({
+        messages: state.messages.map((m) =>
+          m.id?.startsWith('msg-stream-') ? finalMsg : m
+        ),
+      }))
 
       if (normalizedGraph) setCurrentGraph({ data: normalizedGraph })
 
       const titleUpdate = messages.length === 0
-        ? (data.suggested_title || text.slice(0, 80) || 'Nouvelle conversation')
+        ? (meta?.suggested_title || text.slice(0, 80) || 'Nouvelle conversation')
         : null
       if (titleUpdate) {
         await supabase
