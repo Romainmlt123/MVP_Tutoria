@@ -7,7 +7,7 @@ import { personas } from '../data/mockData'
 import useAuthStore from '../store/authStore'
 import useProfileStore from '../store/profileStore'
 import useUserSettingsStore from '../store/userSettingsStore'
-import useApiKeyStore from '../store/apiKeyStore'
+import { useApiKeyStore } from '../store/apiKeyStore'
 import { SUBJECT_LABELS, LEVEL_LABELS, LEARNING_LABELS } from '../utils/onboardingContext'
 
 const settingsNav = [
