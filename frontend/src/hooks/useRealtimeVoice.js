@@ -4,28 +4,19 @@
 import { useState, useCallback } from 'react'
 import useChatStore from '../store/chatStore'
 import useProfileStore from '../store/profileStore'
+import { getApiKeyHeaders } from '../store/apiKeyStore'
 import { normalizeGraphData } from '../utils/graphNormalizer'
 import { buildUserContextForPrompt } from '../utils/onboardingContext'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const DEBUG = import.meta.env.DEV
+const log = (...args) => DEBUG && console.log('[Realtime]', ...args)
 
-// Logs détaillés (désactiver en prod si besoin)
-const VOICE_DEBUG = true
-const log = (...args) => VOICE_DEBUG && console.log('[Realtime]', ...args)
-const logEvent = (type, data) => {
-  if (!VOICE_DEBUG) return
-  const skipPayload = type?.includes('delta') || type?.includes('audio')
-  const payload = skipPayload ? '(données delta/audio)' : (data && typeof data === 'object' ? { ...data } : data)
-  console.log('[Realtime] 📥', type || '?', payload)
-}
-
-// Singleton - une seule connexion
 let pc = null
 let dc = null
 let audio = null
 let stream = null
 let connectingPromise = null
-let sessionCreatedCount = 0
 
 function cleanup() {
   dc?.close?.()
@@ -37,6 +28,21 @@ function cleanup() {
     if (audio.parentNode) audio.remove()
   }
   pc = dc = audio = stream = connectingPromise = null
+}
+
+function sendFunctionOutput(callId) {
+  if (dc?.readyState !== 'open') return
+  dc.send(JSON.stringify({
+    type: 'conversation.item.create',
+    item: { type: 'function_call_output', call_id: callId, output: '{"success":true}' },
+  }))
+  dc.send(JSON.stringify({ type: 'response.create' }))
+}
+
+function extractTranscript(content) {
+  if (!content) return null
+  const part = Array.isArray(content) ? content.find((c) => c.transcript || c.text) : content
+  return part?.transcript ?? part?.text ?? (typeof part === 'string' ? part : null)
 }
 
 export default function useRealtimeVoice() {
@@ -53,301 +59,168 @@ export default function useRealtimeVoice() {
       let data
       try {
         data = JSON.parse(e.data)
-      } catch (err) {
-        log('Parse error on message:', err)
+      } catch {
+        log('Parse error:', e.data?.slice?.(0, 50))
         return
       }
 
-      const type = data.type
-      logEvent(type, data)
+      const { type } = data
 
-      if (type === 'session.created') {
-        sessionCreatedCount += 1
-        log(`SESSION #${sessionCreatedCount} créée (une seule attendue par conversation)`)
-        if (sessionCreatedCount > 1) {
-          console.warn('[Realtime] ⚠️ Plusieurs session.created détectés — possible reconnexion WebRTC, la voix peut changer.')
-        }
-      }
-      if (type === 'session.updated') {
-        const voice = data.session?.audio?.output?.voice
-        log('session.updated → voice =', voice ?? '(non défini)')
-      }
-
-      // Avec server_vad + create_response: true, le serveur crée la réponse automatiquement — ne pas envoyer response.create
-      if (type === 'input_audio_buffer.speech_started') {
-        log('🎤 PAROLE DÉTECTÉE (speech_started)')
-        setIsSpeaking(true)
-      }
-      if (type === 'input_audio_buffer.speech_stopped') {
-        log('🎤 PAROLE TERMINÉE (speech_stopped) — le serveur va créer la réponse automatiquement')
-        setIsSpeaking(false)
-      }
-      if (type === 'input_audio_buffer.committed') {
-        log('📎 Buffer audio commit côté serveur')
-      }
-      if (type === 'response.created') {
-        log('🔄 response.created — le modèle commence à répondre')
-        setIsAssistantSpeaking(true)
-      }
-      if (type === 'response.output_item.added') {
-        log('📦 response.output_item.added', data.item?.type)
-      }
-
-      if (type === 'response.output_item.done') {
-        log('📦 response.output_item.done', JSON.stringify(data.item).slice(0, 300))
-        const content = data.item?.content
-        if (content) {
-          const textPart = Array.isArray(content)
-            ? content.find((c) => c.transcript || c.text)
-            : content.transcript || content.text
-          const text = textPart?.transcript ?? textPart?.text ?? (typeof textPart === 'string' ? textPart : null)
-          if (text) {
-            log('✅ Texte assistant:', text.slice(0, 100))
-            addMessage({ role: 'assistant', content: text })
-          } else {
-            log('⚠️ Pas de texte trouvé dans item.content. item=', data.item)
+      switch (type) {
+        case 'input_audio_buffer.speech_started':
+          setIsSpeaking(true)
+          break
+        case 'input_audio_buffer.speech_stopped':
+          setIsSpeaking(false)
+          break
+        case 'response.created':
+          setIsAssistantSpeaking(true)
+          break
+        case 'response.done': {
+          const resp = data.response
+          if (resp?.status === 'failed') {
+            const err = resp?.error || resp?.status_details
+            const msg = err?.message ?? err?.code ?? JSON.stringify(err)
+            setError(`Réponse IA échouée: ${msg}`)
+            log('Response failed:', msg)
           }
-        } else {
-          log('⚠️ response.output_item.done sans item.content. item=', data.item)
+          setIsAssistantSpeaking(false)
+          break
         }
-      }
-
-      if (type === 'response.done') {
-        const resp = data.response
-        const status = resp?.status
-        if (status === 'failed') {
-          const err = resp?.error || resp?.status_details
-          const msg = err?.message ?? err?.code ?? JSON.stringify(err)
-          log('❌ response.done FAILED:', msg, resp)
-          setError(`Réponse IA échouée: ${msg}`)
+        case 'response.output_item.done': {
+          const text = extractTranscript(data.item?.content)
+          if (text) addMessage({ role: 'assistant', content: text })
+          break
         }
-        log('✅ response.done', resp?.output ? 'output présent' : 'pas d\'output', resp)
-        setIsAssistantSpeaking(false)
-      }
-
-      if (type === 'response.output_audio_transcript.done') {
-        log('📝 Transcript audio:', data.transcript?.slice(0, 200))
-      }
-
-      // Un seul flux audio : on n'envoie response.create qu'après function_call (même session, même voix).
-      // Pas de response.create sur speech_stopped (le serveur le fait avec create_response: true).
-      if (type === 'response.function_call_arguments.done') {
-        const fnName = data.name
-        const argsStr = data.arguments
-        const isGenerateGraph =
-          fnName === 'generate_graph' ||
-          (argsStr && (() => {
+        case 'response.function_call_arguments.done': {
+          const { name, call_id, arguments: argsStr } = data
+          if (name === 'generate_graph' && argsStr) {
             try {
-              const o = JSON.parse(argsStr)
-              if (!o || typeof o !== 'object') return false
-              if (o.is3D === true) return !!(o.surfaces?.length || o.curves3D?.length || o.curves3d?.length || o.elements3D?.length || o.elements3d?.length)
-              return (o.title != null || o.boundingBox != null) && Array.isArray(o.boundingBox)
-            } catch {
-              return false
+              const graph = normalizeGraphData(JSON.parse(argsStr))
+              if (graph) {
+                setCurrentGraph({ data: graph })
+                addMessage({ role: 'assistant', content: `📊 ${graph.title || 'Graphique'}` })
+              }
+            } catch (err) {
+              console.error('[Realtime] Graph error:', err)
             }
-          })())
-        const isWriteToWhiteboard = fnName === 'write_to_whiteboard'
-
-        if (isGenerateGraph && argsStr) {
-          log('📊 generate_graph appelé, arguments:', argsStr.slice(0, 200))
-          try {
-            const raw = JSON.parse(argsStr)
-            const graph = normalizeGraphData(raw)
-            if (graph) {
-              setCurrentGraph({ data: graph })
-              addMessage({ role: 'assistant', content: `📊 ${graph.title || 'Graphique'}` })
-            } else {
-              log('⚠️ Graphique invalide après normalisation, ignoré')
+            sendFunctionOutput(call_id)
+          } else if (name === 'write_to_whiteboard' && argsStr) {
+            try {
+              const { content, action = 'append' } = JSON.parse(argsStr)
+              action === 'clear' ? setWhiteboardContent('', 'clear') : (typeof content === 'string' && setWhiteboardContent(content, action))
+            } catch (err) {
+              console.error('[Realtime] Whiteboard error:', err)
             }
-          } catch (err) {
-            console.error('[Realtime] Graph parse error:', err)
+            sendFunctionOutput(call_id)
           }
-          if (dc?.readyState === 'open') {
-            dc.send(
-              JSON.stringify({
-                type: 'conversation.item.create',
-                item: {
-                  type: 'function_call_output',
-                  call_id: data.call_id,
-                  output: '{"success":true}',
-                },
-              })
-            )
-            dc.send(JSON.stringify({ type: 'response.create' }))
-            log('📤 Envoyé: function_call_output + response.create')
-          }
-        } else if (isWriteToWhiteboard && argsStr) {
-          log('📝 write_to_whiteboard appelé')
-          try {
-            const { content, action = 'append' } = JSON.parse(argsStr)
-            if (action === 'clear') {
-              setWhiteboardContent('', 'clear')
-            } else if (content && typeof content === 'string') {
-              setWhiteboardContent(content, action)
-            }
-          } catch (err) {
-            console.error('[Realtime] Whiteboard parse error:', err)
-          }
-          if (dc?.readyState === 'open') {
-            dc.send(
-              JSON.stringify({
-                type: 'conversation.item.create',
-                item: {
-                  type: 'function_call_output',
-                  call_id: data.call_id,
-                  output: '{"success":true}',
-                },
-              })
-            )
-            dc.send(JSON.stringify({ type: 'response.create' }))
-            log('📤 Envoyé: function_call_output (whiteboard) + response.create')
-          }
+          break
         }
-      }
-
-      if (type === 'error') {
-        log('❌ Erreur serveur:', data)
-        setError(data.error?.message ?? data.message ?? JSON.stringify(data))
+        case 'error':
+          setError(data.error?.message ?? data.message ?? JSON.stringify(data))
+          log('Server error:', data)
+          break
+        default:
+          break
       }
     },
     [addMessage, setCurrentGraph, setWhiteboardContent]
   )
 
   const connect = useCallback(async () => {
-    if (pc?.connectionState === 'connected') {
-      log('Déjà connecté, skip')
-      return setIsConnected(true)
-    }
-    if (connectingPromise) {
-      log('Connexion déjà en cours, réutilisation de la promesse')
-      return connectingPromise
-    }
+    if (pc?.connectionState === 'connected') return setIsConnected(true)
+    if (connectingPromise) return connectingPromise
 
-    const thisAttemptId = Date.now()
     connectingPromise = (async () => {
-      sessionCreatedCount = 0
       cleanup()
       setIsConnecting(true)
       setError(null)
-      log('Connexion en cours... (attempt', thisAttemptId, ')')
-
-      // Référence locale : si cleanup() est appelé pendant le fetch, on n'utilise pas une pc fermée
-      let peerConnection = null
-      let dataChannel = null
+      log('Connecting...')
 
       try {
-        log('1/4 Création peer connection + micro')
-        peerConnection = new RTCPeerConnection()
+        const peerConnection = new RTCPeerConnection()
         pc = peerConnection
         audio = document.createElement('audio')
         audio.autoplay = true
         audio.setAttribute('playsinline', '')
         audio.style.cssText = 'position:fixed;width:0;height:0;opacity:0;pointer-events:none;'
         document.body.appendChild(audio)
-        let remoteAudioAttached = false
+
+        let remoteAttached = false
         peerConnection.ontrack = (e) => {
-          if (remoteAudioAttached) {
-            log('Track distant ignoré (déjà une piste audio attachée, évite doublon)')
-            return
-          }
-          const remoteStream = e.streams[0]
-          if (!remoteStream) return
-          const audioTracks = remoteStream.getAudioTracks()
-          if (audioTracks.length === 0) return
-          remoteAudioAttached = true
-          const singleTrackStream = new MediaStream([audioTracks[0]])
-          audio.srcObject = singleTrackStream
-          audio.play().then(() => log('Lecture audio démarrée')).catch((err) => log('Lecture audio bloquée (autoplay?):', err?.message))
+          if (remoteAttached) return
+          const s = e.streams[0]
+          if (!s?.getAudioTracks().length) return
+          remoteAttached = true
+          audio.srcObject = new MediaStream([s.getAudioTracks()[0]])
+          audio.play().catch((err) => log('Audio play:', err?.message))
         }
 
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true },
-        })
+        stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
         peerConnection.addTrack(stream.getTracks()[0])
-        log('2/4 Micro ajouté, création data channel')
 
-        dataChannel = peerConnection.createDataChannel('oai-events')
-        dc = dataChannel
-        dataChannel.onopen = () => {
-          log('4/4 Data channel oai-events OPEN')
-          setIsConnected(true)
-        }
-        dataChannel.onmessage = onMessage
-        dataChannel.onclose = () => {
-          log('Data channel fermé')
-          setIsConnected(false)
-          cleanup()
-        }
-        dataChannel.onerror = (err) => log('Data channel error:', err)
+        dc = peerConnection.createDataChannel('oai-events')
+        dc.onopen = () => setIsConnected(true)
+        dc.onmessage = onMessage
+        dc.onclose = () => { setIsConnected(false); cleanup() }
+        dc.onerror = (e) => log('DataChannel error:', e)
 
         const offer = await peerConnection.createOffer()
         await peerConnection.setLocalDescription(offer)
-        log('3/4 Offer SDP créé, récupération token éphémère puis appel direct OpenAI')
 
         const userContext = buildUserContextForPrompt(useProfileStore.getState().profile)
         const sessionRes = await fetch(`${API_URL}/api/realtime/session`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...getApiKeyHeaders() },
           body: JSON.stringify({ user_context: userContext }),
         })
         if (!sessionRes.ok) {
-          const errText = await sessionRes.text()
-          log('Erreur session:', sessionRes.status, errText)
-          throw new Error(errText?.slice(0, 200) || `Erreur token (${sessionRes.status})`)
+          const text = await sessionRes.text()
+          let msg
+          try {
+            const j = JSON.parse(text)
+            msg = typeof j.detail === 'string' ? j.detail : j.detail?.[0]?.msg ?? j.error ?? text
+          } catch {
+            msg = text?.slice(0, 200) || `Erreur (${sessionRes.status})`
+          }
+          if (sessionRes.status === 401) {
+            throw new Error(msg || "Clé API OpenAI requise. Ajoute ta clé dans Paramètres → Clé API pour tester l'application.")
+          }
+          throw new Error(msg)
         }
         const sessionData = await sessionRes.json()
         const clientSecret = sessionData?.client_secret?.value
-        if (!clientSecret) {
-          throw new Error('Token éphémère manquant')
-        }
+        if (!clientSecret) throw new Error('Token manquant')
 
         const sdpRes = await fetch('https://api.openai.com/v1/realtime/calls', {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${clientSecret}`,
-            'Content-Type': 'application/sdp',
-          },
+          headers: { Authorization: `Bearer ${clientSecret}`, 'Content-Type': 'application/sdp' },
           body: offer.sdp,
         })
-        const rawBody = await sdpRes.text()
+        let answerSdp = await sdpRes.text()
         if (!sdpRes.ok) {
-          log('Erreur connect OpenAI:', sdpRes.status, rawBody)
-          let errMsg = rawBody.slice(0, 200)
+          let msg = answerSdp.slice(0, 200)
           try {
-            const j = JSON.parse(rawBody)
-            const detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail || j)
-            errMsg = detail.slice(0, 400)
+            const j = JSON.parse(answerSdp)
+            msg = (typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail || j)).slice(0, 400)
           } catch (_) {}
-          if (errMsg.includes('Gateway time-out') || errMsg.includes('504') || errMsg.includes('<!DOCTYPE')) {
-            errMsg = 'Le service vocal met trop de temps à répondre. Réessaie dans une minute.'
-          }
-          throw new Error(errMsg || `Connexion vocale refusée (${sdpRes.status})`)
+          if (msg.includes('504') || msg.includes('Gateway')) msg = 'Service vocal temporairement indisponible. Réessaie.'
+          throw new Error(msg || `Connexion refusée (${sdpRes.status})`)
         }
-        let answerSdp = rawBody
-        if (rawBody.trim().startsWith('{')) {
+        if (answerSdp.trim().startsWith('{')) {
           try {
-            const data = JSON.parse(rawBody)
-            const extracted = data.detail ?? data.sdp ?? data.answer
-            if (typeof extracted === 'string' && extracted.includes('v=')) {
-              answerSdp = extracted
-              log('SDP extrait du JSON (detail/sdp/answer)')
-            }
+            const j = JSON.parse(answerSdp)
+            const ext = j.detail ?? j.sdp ?? j.answer
+            if (typeof ext === 'string' && ext.includes('v=')) answerSdp = ext
           } catch (_) {}
         }
 
-        // Ne pas appeler setRemoteDescription si la connexion a été fermée (ex: double mount / cleanup)
-        if (peerConnection.connectionState === 'closed') {
-          log('Connexion déjà fermée, abandon setRemoteDescription (attempt', thisAttemptId, ')')
-          return
+        if (peerConnection.connectionState === 'closed') return
+        if (peerConnection.signalingState !== 'stable') {
+          await peerConnection.setRemoteDescription({ type: 'answer', sdp: answerSdp })
         }
-        if (peerConnection.signalingState === 'stable') {
-          log('Déjà en état stable, skip setRemoteDescription (évite doublon)')
-          return
-        }
-        await peerConnection.setRemoteDescription({ type: 'answer', sdp: answerSdp })
-        log('Answer SDP reçu, connexion WebRTC établie')
+        log('Connected')
       } catch (err) {
-        log('Erreur connexion:', err)
         setError(err.message)
         cleanup()
       } finally {

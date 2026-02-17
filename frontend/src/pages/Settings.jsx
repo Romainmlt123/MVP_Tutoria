@@ -7,10 +7,12 @@ import { personas } from '../data/mockData'
 import useAuthStore from '../store/authStore'
 import useProfileStore from '../store/profileStore'
 import useUserSettingsStore from '../store/userSettingsStore'
+import useApiKeyStore from '../store/apiKeyStore'
 import { SUBJECT_LABELS, LEVEL_LABELS, LEARNING_LABELS } from '../utils/onboardingContext'
 
 const settingsNav = [
   { icon: 'person', label: 'Profil', id: 'profile' },
+  { icon: 'key', label: 'Clé API', id: 'api-key' },
   { icon: 'auto_awesome', label: 'Préférences IA', id: 'ai' },
   { icon: 'notifications', label: 'Notifications', id: 'notifications' },
   { icon: 'credit_card', label: 'Abonnement', id: 'subscription' },
@@ -32,6 +34,9 @@ export default function Settings() {
   const [profileSaved, setProfileSaved] = useState(false)
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
+  const { openaiApiKey, setOpenaiApiKey } = useApiKeyStore()
+  const [apiKeyInput, setApiKeyInput] = useState('')
+  const [apiKeySaved, setApiKeySaved] = useState(false)
 
   useEffect(() => {
     if (user?.id) {
@@ -55,6 +60,13 @@ export default function Settings() {
     setInterruptMode(prefs.interruptMode)
     setAutoPlay(prefs.autoPlay)
   }, [settings])
+
+  const handleSaveApiKey = () => {
+    setOpenaiApiKey(apiKeyInput)
+    setApiKeyInput('')
+    setApiKeySaved(true)
+    setTimeout(() => setApiKeySaved(false), 2000)
+  }
 
   const displayNameLabel = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur'
   const userEmail = user?.email ?? ''
@@ -232,6 +244,55 @@ export default function Settings() {
                       {profile?.settings?.onboarding?.completed ? 'Modifier mon profil d\'apprentissage' : 'Compléter mon profil d\'apprentissage'}
                       <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     </Link>
+                  </div>
+                </section>
+              </>
+            )}
+
+            {/* Onglet : Clé API */}
+            {activeTab === 'api-key' && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight">Clé API OpenAI</h2>
+                  <p className="text-text-secondary text-base max-w-2xl">
+                    Pour tester Tutor&apos;IA, ajoute ta propre clé OpenAI. Elle est stockée localement dans ton navigateur et n&apos;est jamais envoyée à nos serveurs (sauf pour les appels à l&apos;API OpenAI).
+                  </p>
+                </div>
+                <section className="space-y-6">
+                  <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="api-key" className="text-sm font-medium text-text-primary">Clé API OpenAI (sk-...)</label>
+                      <input
+                        id="api-key"
+                        type="password"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        placeholder={openaiApiKey ? '••••••••••••••••' : 'sk-...'}
+                        className="w-full rounded-xl border border-border bg-background py-3 px-4 text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono text-sm"
+                        autoComplete="off"
+                      />
+                      {openaiApiKey && (
+                        <p className="text-xs text-green-600 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                          Clé configurée
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSaveApiKey}
+                      disabled={!apiKeyInput.trim()}
+                      className="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">save</span>
+                      {apiKeySaved ? 'Enregistrée !' : 'Enregistrer la clé'}
+                    </button>
+                    {apiKeySaved && (
+                      <p className="text-sm text-green-600 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                        Clé enregistrée. Tu peux maintenant utiliser le chat et le mode vocal.
+                      </p>
+                    )}
                   </div>
                 </section>
               </>

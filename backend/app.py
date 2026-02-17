@@ -31,11 +31,23 @@ app.add_middleware(
 )
 
 
-def get_openai_client():
-    """Retourne un client OpenAI configuré."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY non configurée")
+def get_openai_api_key(request: Request | None = None) -> str:
+    """Récupère la clé API OpenAI : header X-OpenAI-API-Key prioritaire, sinon env."""
+    if request:
+        key = request.headers.get("X-OpenAI-API-Key")
+        if key and key.strip():
+            return key.strip()
+    key = os.getenv("OPENAI_API_KEY")
+    if key and key.strip():
+        return key.strip()
+    raise HTTPException(
+        status_code=401,
+        detail="Clé API OpenAI requise. Ajoute ta clé dans Paramètres → Clé API pour tester l'application.",
+    )
+
+
+def get_openai_client(api_key: str):
+    """Retourne un client OpenAI configuré avec la clé fournie."""
     return OpenAI(api_key=api_key), api_key
 
 
@@ -92,15 +104,17 @@ def generate_conversation_title(client: OpenAI, first_message: str) -> str | Non
 
 
 @app.post("/api/chat")
-async def chat(request: dict):
+async def chat(request: Request):
     """
     Chat texte avec GPT-4o.
-    Body: { "messages": [...], "user_context": "..." (optionnel, issu de l'onboarding) }
-    Réponse: { "content": "...", "graph": {...} | null }
+    Body: { "messages": [...], "user_context": "..." (optionnel) }
+    Header: X-OpenAI-API-Key (requis sauf si OPENAI_API_KEY en env)
     """
-    client, _ = get_openai_client()
+    api_key = get_openai_api_key(request)
+    client, _ = get_openai_client(api_key)
 
-    messages = request.get("messages", [])
+    body = await request.json()
+    messages = body.get("messages", [])
     if not messages:
         raise HTTPException(status_code=400, detail="Messages requis")
 
@@ -129,15 +143,15 @@ async def chat(request: dict):
     return {"content": content, "graph": graph, "suggested_title": suggested_title}
 
 
-def _stream_chat_generator(request: dict):
+def _stream_chat_generator(body: dict, api_key: str):
     """Générateur pour le streaming SSE du chat."""
-    client, _ = get_openai_client()
-    messages = request.get("messages", [])
+    client, _ = get_openai_client(api_key)
+    messages = body.get("messages", [])
     if not messages:
         yield f"data: {json.dumps({'error': 'Messages requis'})}\n\n"
         return
 
-    user_context = request.get("user_context")
+    user_context = body.get("user_context")
     system_content = build_system_prompt(user_context)
 
     try:
@@ -170,14 +184,16 @@ def _stream_chat_generator(request: dict):
 
 
 @app.post("/api/chat/stream")
-async def chat_stream(request: dict):
+async def chat_stream(request: Request):
     """
     Chat texte avec GPT-4o en streaming (SSE).
     Body: { "messages": [...], "user_context": "..." (optionnel) }
-    Réponse: flux SSE (data: {"content": "chunk"} ou data: {"done": true, "graph": ..., "suggested_title": ...})
+    Header: X-OpenAI-API-Key (requis sauf si OPENAI_API_KEY en env)
     """
+    api_key = get_openai_api_key(request)
+    body = await request.json()
     return StreamingResponse(
-        _stream_chat_generator(request),
+        _stream_chat_generator(body, api_key),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -191,10 +207,10 @@ async def chat_stream(request: dict):
 async def create_realtime_session(request: Request):
     """
     Crée une session OpenAI Realtime (token éphémère pour WebRTC).
-    Body optionnel: { "user_context": "..." } (contexte onboarding pour personnaliser la voix).
-    Réponse: { "success": true, "client_secret": { "value": "...", "expires_at": ... } }
+    Body optionnel: { "user_context": "..." }
+    Header: X-OpenAI-API-Key (requis sauf si OPENAI_API_KEY en env)
     """
-    _, api_key = get_openai_client()
+    api_key = get_openai_api_key(request)
     try:
         raw = await request.body()
         body = json.loads(raw) if raw and raw.strip() else {}
@@ -257,10 +273,10 @@ async def create_realtime_session(request: Request):
 @app.post("/api/realtime/connect", response_class=PlainTextResponse)
 async def realtime_connect(request: Request):
     """
-    Interface unifiée : reçoit le SDP offer du client, envoie SDP + session à OpenAI,
-    retourne le SDP answer. La session inclut explicitement turn_detection (VAD).
+    Interface unifiée : reçoit le SDP offer du client, envoie SDP + session à OpenAI.
+    Header: X-OpenAI-API-Key (requis sauf si OPENAI_API_KEY en env)
     """
-    _, api_key = get_openai_client()
+    api_key = get_openai_api_key(request)
     sdp = (await request.body()).decode("utf-8")
 
     session_config = {
