@@ -11,6 +11,9 @@ import FlashcardReview from './pages/FlashcardReview'
 import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
 import Voice from './pages/Voice'
+import Explorer from './pages/Explorer'
+import ExplorerMap from './pages/ExplorerMap'
+import ExplorerPath from './pages/ExplorerPath'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
@@ -71,6 +74,9 @@ export default function App() {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/voice" element={<Voice />} />
+        <Route path="/explorer" element={<Explorer />} />
+        <Route path="/explorer/:subjectId" element={<ExplorerMap />} />
+        <Route path="/explorer/:subjectId/chapter/:chapterId" element={<ExplorerPath />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -20,7 +20,10 @@ export default function Chat() {
     clearCurrentConversation,
     fetchConversations,
     loadConversation,
+    setSessionContext,
   } = useChatStore()
+
+  const [initialMessage, setInitialMessage] = useState(null)
 
   useEffect(() => {
     if (user?.id) fetchConversations(user.id)
@@ -31,6 +34,17 @@ export default function Chat() {
     const openId = location.state?.openConversationId
     if (openId && user?.id) loadConversation(openId)
   }, [location.state?.openConversationId, user?.id, loadConversation])
+
+  // Contexte Explorer : ouvrir le chat avec un contexte pré-rempli
+  useEffect(() => {
+    const explorerContext = location.state?.explorerContext
+    if (explorerContext) {
+      setSessionContext(explorerContext)
+      clearCurrentConversation()
+      setInitialMessage("J'aimerais apprendre ce chapitre. Peux-tu m'expliquer ?")
+      window.history.replaceState({}, '', location.pathname)
+    }
+  }, [location.state?.explorerContext, setSessionContext, clearCurrentConversation])
 
   const handleSend = useCallback(
     (text) => {
@@ -147,7 +161,12 @@ export default function Chat() {
           </div>
         </div>
 
-        <ChatInput onSend={handleSend} disabled={isLoading} />
+        <ChatInput
+          onSend={handleSend}
+          disabled={isLoading}
+          initialMessage={initialMessage}
+          onInitialMessageConsumed={() => setInitialMessage(null)}
+        />
       </main>
     </div>
   )

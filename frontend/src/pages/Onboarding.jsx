@@ -28,7 +28,13 @@ const LEARNING_OPTIONS = [
   { id: 'repetition', label: 'Répétition', icon: 'replay', emoji: '🔄' },
 ]
 
-const TOTAL_STEPS = 3
+const GRADES = [
+  { id: '2nde', label: 'Seconde' },
+  { id: '1ere', label: 'Première' },
+  { id: 'terminale', label: 'Terminale' },
+]
+
+const TOTAL_STEPS = 4
 
 export default function Onboarding() {
   const navigate = useNavigate()
@@ -44,6 +50,7 @@ export default function Onboarding() {
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [grade, setGrade] = useState('2nde')
   const [levels, setLevels] = useState(
     SUBJECTS.reduce((acc, s) => ({ ...acc, [s.id]: 3 }), {})
   )
@@ -57,6 +64,7 @@ export default function Onboarding() {
     if (!o) return
     if (o.firstName) setFirstName(o.firstName)
     if (o.lastName) setLastName(o.lastName)
+    if (o.grade) setGrade(o.grade === '1ère' ? '1ere' : o.grade || '2nde')
     if (o.levels && typeof o.levels === 'object') {
       setLevels((prev) => ({ ...prev, ...o.levels }))
     }
@@ -85,6 +93,7 @@ export default function Onboarding() {
       completed: true,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      grade: grade || '2nde',
       levels: { ...levels },
       learningStyle: { ...learningStyle },
     })
@@ -185,8 +194,44 @@ export default function Onboarding() {
           </>
         )}
 
-        {/* Étape 2 : Niveaux par matière */}
+        {/* Étape 2 : Classe */}
         {step === 2 && (
+          <>
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center shadow-xl shadow-primary/25 mb-6">
+                <span className="text-5xl" aria-hidden="true">🎓</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight mb-2">
+                En quelle classe es-tu ?
+              </h1>
+              <p className="text-text-secondary text-base">
+                On adaptera les révisions au programme officiel de ta classe.
+              </p>
+            </div>
+            <div className="space-y-3">
+              {GRADES.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setGrade(g.id)}
+                  className={`w-full rounded-2xl border-2 p-5 flex items-center justify-center gap-3 transition-all ${
+                    grade === g.id
+                      ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                      : 'border-white bg-white text-text-primary hover:border-primary/30 shadow-sm'
+                  }`}
+                >
+                  {grade === g.id && (
+                    <span className="material-symbols-outlined text-[24px]" aria-hidden="true">check_circle</span>
+                  )}
+                  <span className="font-bold text-lg">{g.label}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Étape 3 : Niveaux par matière */}
+        {step === 3 && (
           <>
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center shadow-xl shadow-primary/25 mb-6">
@@ -231,8 +276,8 @@ export default function Onboarding() {
           </>
         )}
 
-        {/* Étape 3 : Préférences d'apprentissage */}
-        {step === 3 && (
+        {/* Étape 4 : Préférences d'apprentissage */}
+        {step === 4 && (
           <>
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center shadow-xl shadow-primary/25 mb-6">

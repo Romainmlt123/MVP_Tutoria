@@ -7,7 +7,10 @@ import useProfileStore from './profileStore'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function getUserContext() {
-  return buildUserContextForPrompt(useProfileStore.getState().profile)
+  const profileContext = buildUserContextForPrompt(useProfileStore.getState().profile)
+  const sessionContext = useChatStore.getState().sessionContext
+  const parts = [profileContext, sessionContext].filter(Boolean)
+  return parts.join(' ')
 }
 
 async function consumeStream(response, onChunk, onDone) {
@@ -67,6 +70,10 @@ export const useChatStore = create((set, get) => ({
   graphVersion: 0,
   whiteboardContent: [],
   showWhiteboard: false,
+  sessionContext: null,
+
+  setSessionContext: (context) => set({ sessionContext: context || null }),
+  clearSessionContext: () => set({ sessionContext: null }),
 
   setWhiteboardContent: (content, action = 'append') =>
     set((state) => {

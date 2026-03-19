@@ -27,6 +27,12 @@ export const LEARNING_LABELS = {
   repetition: 'Répétition / révisions',
 }
 
+export const GRADE_LABELS = {
+  '2nde': 'Seconde',
+  '1ere': 'Première',
+  terminale: 'Terminale',
+}
+
 /**
  * @param {object} profile - profile Supabase (avec settings.onboarding)
  * @returns {string} Contexte à injecter dans le prompt système, ou '' si pas d'onboarding
@@ -41,6 +47,12 @@ export function buildUserContextForPrompt(profile) {
   const lastName = (onboarding.lastName || '').trim()
   const fullName = [firstName, lastName].filter(Boolean).join(' ')
   if (fullName) parts.push(`Prénom / nom : ${fullName}.`)
+
+  const grade = onboarding.grade
+  if (grade) {
+    const gradeLabel = GRADE_LABELS[grade] || grade
+    parts.push(`Classe : ${gradeLabel}.`)
+  }
 
   if (onboarding.levels && typeof onboarding.levels === 'object') {
     const levelParts = Object.entries(onboarding.levels)

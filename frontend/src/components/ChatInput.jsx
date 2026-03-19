@@ -1,7 +1,14 @@
-import { useState, useRef, useCallback } from 'react'
-export default function ChatInput({ onSend, disabled }) {
+import { useState, useRef, useCallback, useEffect } from 'react'
+export default function ChatInput({ onSend, disabled, initialMessage, onInitialMessageConsumed }) {
   const [message, setMessage] = useState('')
   const textareaRef = useRef(null)
+
+  useEffect(() => {
+    if (initialMessage) {
+      setMessage(initialMessage)
+      onInitialMessageConsumed?.()
+    }
+  }, [initialMessage, onInitialMessageConsumed])
 
   const resetHeight = useCallback(() => {
     if (textareaRef.current) {
