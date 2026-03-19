@@ -4,7 +4,6 @@
 import { useState, useCallback } from 'react'
 import useChatStore from '../store/chatStore'
 import useProfileStore from '../store/profileStore'
-import { getApiKeyHeaders } from '../store/apiKeyStore'
 import { normalizeGraphData } from '../utils/graphNormalizer'
 import { buildUserContextForPrompt } from '../utils/onboardingContext'
 
@@ -171,7 +170,7 @@ export default function useRealtimeVoice() {
         const userContext = buildUserContextForPrompt(useProfileStore.getState().profile)
         const sessionRes = await fetch(`${API_URL}/api/realtime/session`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...getApiKeyHeaders() },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_context: userContext }),
         })
         if (!sessionRes.ok) {
@@ -182,9 +181,6 @@ export default function useRealtimeVoice() {
             msg = typeof j.detail === 'string' ? j.detail : j.detail?.[0]?.msg ?? j.error ?? text
           } catch {
             msg = text?.slice(0, 200) || `Erreur (${sessionRes.status})`
-          }
-          if (sessionRes.status === 401) {
-            throw new Error(msg || "Clé API OpenAI requise. Ajoute ta clé dans Paramètres → Clé API pour tester l'application.")
           }
           throw new Error(msg)
         }

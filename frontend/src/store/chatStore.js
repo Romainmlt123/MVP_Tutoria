@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase'
 import { normalizeGraphData } from '../utils/graphNormalizer'
 import { buildUserContextForPrompt } from '../utils/onboardingContext'
 import useProfileStore from './profileStore'
-import { getApiKeyHeaders } from './apiKeyStore'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -184,16 +183,13 @@ export const useChatStore = create((set, get) => ({
 
       const res = await fetch(`${API_URL}/api/chat/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getApiKeyHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history, user_context: getUserContext() }),
       })
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         const detail = typeof err.detail === 'string' ? err.detail : err.detail?.[0]?.msg ?? err.error
-        if (res.status === 401) {
-          throw new Error(detail || "Clé API OpenAI requise. Ajoute ta clé dans Paramètres → Clé API pour tester l'application.")
-        }
         throw new Error(detail || `Erreur ${res.status}`)
       }
 
