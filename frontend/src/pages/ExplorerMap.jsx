@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getCurriculum, EXPLORER_SUBJECTS, GRADE_LABELS } from '../data/curriculum'
 import useProfileStore from '../store/profileStore'
@@ -6,6 +7,15 @@ import { SUBJECT_LABELS } from '../utils/onboardingContext'
 const MAP_IMAGES = {
   maths: '/images/carte-mathématiques.jpg',
 }
+
+const MATHS_CITY_POINTS = [
+  { chapterId: 'nombres-calculs', x: 31, y: 18 },
+  { chapterId: 'geometrie', x: 47, y: 18 },
+  { chapterId: 'fonctions', x: 63, y: 18 },
+  { chapterId: 'statistiques-probabilites', x: 79, y: 18 },
+  { chapterId: 'algorithmique', x: 44, y: 31 },
+  { chapterId: 'vocabulaire-ensembliste', x: 66, y: 31 },
+]
 
 export default function ExplorerMap() {
   const { subjectId } = useParams()
@@ -35,6 +45,17 @@ export default function ExplorerMap() {
   }
 
   const hasMapImage = MAP_IMAGES[subjectId]
+  const [hoveredChapterId, setHoveredChapterId] = useState(null)
+
+  const points = useMemo(() => {
+    if (subjectId !== 'maths') return []
+    return MATHS_CITY_POINTS
+      .map((p) => ({
+        ...p,
+        chapter: data.chapters.find((c) => c.id === p.chapterId),
+      }))
+      .filter((p) => p.chapter)
+  }, [subjectId, data])
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-sky-100 to-white font-display text-text-primary">
@@ -55,42 +76,44 @@ export default function ExplorerMap() {
         </p>
       </header>
 
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-auto px-4 pb-6">
         {hasMapImage ? (
-          <div className="absolute inset-0">
+          <div className="relative mx-auto w-full max-w-5xl aspect-square">
             <img
               src={MAP_IMAGES[subjectId]}
               alt={`Carte ${subjectLabel}`}
-              className="w-full h-full object-cover opacity-90"
+              className="w-full h-full object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+            {points.map((point) => {
+              const isHovered = hoveredChapterId === point.chapter.id
+              return (
+                <button
+                  key={point.chapter.id}
+                  type="button"
+                  onMouseEnter={() => setHoveredChapterId(point.chapter.id)}
+                  onMouseLeave={() => setHoveredChapterId(null)}
+                  onFocus={() => setHoveredChapterId(point.chapter.id)}
+                  onBlur={() => setHoveredChapterId(null)}
+                  onClick={() => navigate(`/explorer/${subjectId}/chapter/${point.chapter.id}`)}
+                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                  aria-label={`Ouvrir ${point.chapter.name}`}
+                >
+                  <span className={`block w-5 h-5 rounded-full border-2 border-primary shadow-md transition-all ${isHovered ? 'scale-125 bg-primary' : 'bg-white'}`} />
+                  {isHovered && (
+                    <span className="absolute left-1/2 -translate-x-1/2 -top-11 whitespace-nowrap px-3 py-1.5 rounded-lg bg-black/85 text-white text-xs font-medium">
+                      {point.chapter.name}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-white to-accent-purple/10" />
+          <div className="h-full flex items-center justify-center bg-gradient-to-br from-primary/10 via-white to-accent-purple/10">
+            <p className="text-text-secondary">Carte indisponible pour cette matière.</p>
+          </div>
         )}
-
-        {/* Villes (chapitres) en overlay */}
-        <div className="relative h-full p-6 flex flex-wrap content-center justify-center gap-4">
-          {data.chapters.map((chapter, i) => (
-            <button
-              key={chapter.id}
-              type="button"
-              onClick={() => navigate(`/explorer/${subjectId}/chapter/${chapter.id}`)}
-              className="group relative px-6 py-4 rounded-2xl bg-white/95 backdrop-blur border-2 border-primary/30 shadow-lg hover:shadow-xl hover:border-primary hover:scale-105 transition-all text-left min-w-[180px]"
-            >
-              <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
-                {i + 1}
-              </span>
-              <span className="font-bold text-text-primary block">{chapter.name}</span>
-              <span className="text-xs text-text-muted mt-1 block">
-                {chapter.nodes.length} étapes
-              </span>
-              <span className="material-symbols-outlined absolute right-3 bottom-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                arrow_forward
-              </span>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   )

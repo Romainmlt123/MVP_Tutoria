@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getChapter, getCurriculum, GRADE_LABELS } from '../data/curriculum'
+import { getChapter, GRADE_LABELS } from '../data/curriculum'
 import { SUBJECT_LABELS } from '../utils/onboardingContext'
 import useProfileStore from '../store/profileStore'
 
@@ -8,10 +9,19 @@ const CHAPTER_BACKGROUNDS = {
 }
 
 const NODE_COLORS = {
-  lesson: { bg: 'bg-blue-500', ring: 'ring-blue-400', label: 'Leçon', icon: 'menu_book' },
-  exercise: { bg: 'bg-green-500', ring: 'ring-green-400', label: 'Exercice', icon: 'fitness_center' },
-  boss: { bg: 'bg-red-500', ring: 'ring-red-400', label: 'Boss', icon: 'military_tech' },
+  lesson: { dot: 'bg-blue-500', label: 'Leçon' },
+  exercise: { dot: 'bg-green-500', label: 'Exercice' },
+  boss: { dot: 'bg-red-500', label: 'Boss' },
 }
+
+const DEFAULT_NODE_POINTS = [
+  { x: 18, y: 60 },
+  { x: 32, y: 51 },
+  { x: 46, y: 62 },
+  { x: 60, y: 53 },
+  { x: 74, y: 64 },
+  { x: 86, y: 56 },
+]
 
 function buildExplorerContext(node, chapter, subjectId, grade) {
   const subjectLabel = SUBJECT_LABELS[subjectId] || subjectId
@@ -27,6 +37,7 @@ export default function ExplorerPath() {
 
   const grade = profile?.settings?.onboarding?.grade || '2nde'
   const chapter = getChapter(subjectId, grade, chapterId)
+  const [hoveredNode, setHoveredNode] = useState(null)
 
   if (!chapter) {
     return (
@@ -72,38 +83,45 @@ export default function ExplorerPath() {
         </p>
       </header>
 
-      <div className="relative flex-1 overflow-auto p-6">
-        {/* Parcours en zigzag / linéaire */}
-        <div className="max-w-2xl mx-auto">
-          <div className="flex flex-col gap-6">
+      <div className="relative flex-1 overflow-auto px-4 pb-6 pt-4">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="relative aspect-[4834/864]">
+            {bgImage ? (
+              <img src={bgImage} alt={`Ville ${chapter.name}`} className="w-full h-full object-contain" />
+            ) : (
+              <div className="w-full h-full rounded-xl bg-slate-100" />
+            )}
+
             {chapter.nodes.map((node, i) => {
+              const pos = DEFAULT_NODE_POINTS[i] || DEFAULT_NODE_POINTS[DEFAULT_NODE_POINTS.length - 1]
               const colors = NODE_COLORS[node.type] || NODE_COLORS.lesson
-              const isLeft = i % 2 === 0
+              const isHovered = hoveredNode === i
               return (
-                <div key={i} className={`flex ${isLeft ? 'justify-start' : 'justify-end'}`}>
-                  <button
-                    type="button"
-                    onClick={() => handleNodeClick(node)}
-                    className={`group flex items-center gap-4 p-4 rounded-2xl ${colors.bg} text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all ring-4 ${colors.ring} ring-opacity-50 min-w-[240px] max-w-[320px]`}
-                  >
-                    <span className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[28px]">{colors.icon}</span>
+                <button
+                  key={`${node.title}-${i}`}
+                  type="button"
+                  onMouseEnter={() => setHoveredNode(i)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                  onFocus={() => setHoveredNode(i)}
+                  onBlur={() => setHoveredNode(null)}
+                  onClick={() => handleNodeClick(node)}
+                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                  aria-label={`${colors.label} : ${node.title}`}
+                >
+                  <span className={`block w-6 h-6 rounded-full border-2 border-white shadow-md transition-transform ${colors.dot} ${isHovered ? 'scale-125' : ''}`} />
+                  {isHovered && (
+                    <span className="absolute left-1/2 -translate-x-1/2 -top-11 whitespace-nowrap px-3 py-1.5 rounded-lg bg-black/85 text-white text-xs font-medium">
+                      {colors.label} • {node.title}
                     </span>
-                    <div className="text-left flex-1 min-w-0">
-                      <span className="text-xs font-medium opacity-90 block">{colors.label}</span>
-                      <span className="font-bold truncate block">{node.title}</span>
-                    </div>
-                    <span className="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">
-                      play_arrow
-                    </span>
-                  </button>
-                </div>
+                  )}
+                </button>
               )
             })}
           </div>
 
           {/* Légende */}
-          <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm">
+          <div className="mt-4 flex flex-wrap justify-center gap-6 text-sm">
             <span className="flex items-center gap-2">
               <span className="w-4 h-4 rounded-full bg-blue-500" />
               Leçon
