@@ -3,73 +3,34 @@ import { Link } from 'react-router-dom'
 import Logo from '../components/Logo'
 import GraphPanel from '../components/GraphPanel'
 import WhiteboardPanel from '../components/WhiteboardPanel'
-import VoiceBars from '../components/VoiceBars'
+import VoiceOrb from '../components/VoiceOrb'
 import useRealtimeVoice from '../hooks/useRealtimeVoice'
 import useChatStore from '../store/chatStore'
 
+const STATUS_CONFIG = {
+  connecting: { icon: 'progress_activity', iconClass: 'text-amber-600 animate-spin text-[24px]', label: 'Connexion en cours...' },
+  error: { icon: 'mic_off', iconClass: 'text-red-500 text-[24px]', label: '' },
+  ready: { icon: 'mic', iconClass: 'text-green-600 text-[24px]', label: "Parle, je t'écoute !" },
+  speaking: { icon: 'mic', iconClass: 'text-primary text-[24px]', label: "Je t'écoute..." },
+  disconnected: { icon: 'mic_off', iconClass: 'text-slate-400 text-[24px]', label: 'Déconnecté' },
+}
+
 export default function Voice() {
   const { showGraphPanel, showWhiteboard, graphVersion } = useChatStore()
-  const {
-    isConnected,
-    isConnecting,
-    isSpeaking,
-    isAssistantSpeaking,
-    error,
-    connect,
-    disconnect,
-  } = useRealtimeVoice()
+  const { isConnected, isConnecting, isSpeaking, isAssistantSpeaking, error, connect, disconnect } = useRealtimeVoice()
 
   const connectTimeoutRef = useRef(null)
   useEffect(() => {
-    connectTimeoutRef.current = setTimeout(() => connect(), 150)
+    connectTimeoutRef.current = setTimeout(connect, 150)
     return () => {
       if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current)
       disconnect()
     }
   }, [connect, disconnect])
 
-  const status = isConnecting
-    ? 'connecting'
-    : error
-      ? 'error'
-      : isConnected
-        ? isSpeaking
-          ? 'speaking'
-          : 'ready'
-        : 'disconnected'
-
-  const statusConfig = {
-    connecting: {
-      icon: 'progress_activity',
-      iconClass: 'text-amber-600 animate-spin text-[24px]',
-      label: 'Connexion en cours...',
-    },
-    error: {
-      icon: 'mic_off',
-      iconClass: 'text-red-500 text-[24px]',
-      label: error,
-    },
-    ready: {
-      icon: 'mic',
-      iconClass: 'text-green-600 text-[24px]',
-      label: "Parle, je t'écoute !",
-    },
-    speaking: {
-      icon: 'mic',
-      iconClass: 'text-primary text-[24px]',
-      label: "Je t'écoute...",
-    },
-    disconnected: {
-      icon: 'mic_off',
-      iconClass: 'text-slate-400 text-[24px]',
-      label: 'Déconnecté',
-    },
-  }
-
-  const config = statusConfig[status]
-
-  // Layout comme sur l'image : quand un graphique est généré, le graph occupe la grande zone
-  // et la zone vocale (texte + 5 traits + EN DIRECT) est en bas à droite.
+  const status = isConnecting ? 'connecting' : error ? 'error' : isConnected ? (isSpeaking ? 'speaking' : 'ready') : 'disconnected'
+  const label = status === 'error' ? error : STATUS_CONFIG[status].label
+  const hasContent = showGraphPanel || showWhiteboard
   return (
     <div className="relative flex h-full min-h-[80vh] w-full flex-col overflow-hidden bg-gradient-to-br from-[#f0f2f8] via-white to-[#ede7f6] font-display text-text-primary antialiased">
       {/* En-tête */}
@@ -95,7 +56,7 @@ export default function Voice() {
       {/* Zone principale : graph + whiteboard OU écran centré ; zone vocale en bas à droite quand contenu */}
       <main className="relative z-10 flex flex-1 min-h-0 overflow-hidden">
         {/* Grande zone : graphique à gauche, tableau blanc à droite (quand les deux sont utilisés) */}
-        {(showGraphPanel || showWhiteboard) && (
+        {hasContent && (
           <div className="flex-1 min-w-0 flex flex-col md:flex-row gap-4 overflow-hidden pr-4 pb-4">
             {showGraphPanel && (
               <div className="flex-1 min-w-0 min-h-0 flex flex-col">
@@ -111,7 +72,7 @@ export default function Voice() {
         )}
 
         {/* Zone vocale : centrée quand pas de graph ni whiteboard */}
-        {!showGraphPanel && !showWhiteboard && (
+        {!hasContent && (
           <div className="flex flex-1 flex-col items-center justify-center px-4">
             <div className="mb-8 text-center">
               <h2 className="text-xl font-light text-text-primary md:text-2xl lg:text-3xl animate-pulse-slow tracking-wide">
@@ -119,11 +80,11 @@ export default function Voice() {
               </h2>
             </div>
             <p className="text-center font-medium text-text-primary max-w-sm mb-6">
-              {config.label}
+              {label}
             </p>
-            {/* Barres au centre (comme l'orbe) — animation uniquement quand l'IA parle */}
+            {/* Orbe vibrante au centre */}
             <div className="mb-8">
-              <VoiceBars status={status} assistantSpeaking={isAssistantSpeaking} size="center" />
+              <VoiceOrb status={status} assistantSpeaking={isAssistantSpeaking} size="center" />
             </div>
             <div className="flex flex-wrap justify-center gap-3">
               {!isConnected && !isConnecting && (
@@ -184,10 +145,10 @@ export default function Voice() {
           </div>
         </div>
 
-        {/* Colonne centre : 5 barres (quand graph ou whiteboard affiché, sinon barres au centre de la page) */}
+        {/* Colonne centre : orbe compacte quand du contenu est affiché */}
         <div className="justify-self-center">
-          {(showGraphPanel || showWhiteboard) && (
-            <VoiceBars status={status} assistantSpeaking={isAssistantSpeaking} size="footer" />
+          {hasContent && (
+            <VoiceOrb status={status} assistantSpeaking={isAssistantSpeaking} size="footer" />
           )}
         </div>
 
