@@ -51,7 +51,7 @@ export default function useRealtimeVoice() {
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false)
   const [error, setError] = useState(null)
 
-  const { addMessage, setCurrentGraph, setWhiteboardContent, clearWhiteboard } = useChatStore()
+  const { addMessageLocal, setCurrentGraph, setWhiteboardContent, clearWhiteboard } = useChatStore()
 
   const onMessage = useCallback(
     (e) => {
@@ -88,7 +88,7 @@ export default function useRealtimeVoice() {
         }
         case 'response.output_item.done': {
           const text = extractTranscript(data.item?.content)
-          if (text) addMessage({ role: 'assistant', content: text })
+          if (text) addMessageLocal({ role: 'assistant', content: text })
           break
         }
         case 'response.function_call_arguments.done': {
@@ -98,7 +98,7 @@ export default function useRealtimeVoice() {
               const graph = normalizeGraphData(JSON.parse(argsStr))
               if (graph) {
                 setCurrentGraph({ data: graph })
-                addMessage({ role: 'assistant', content: `📊 ${graph.title || 'Graphique'}` })
+                addMessageLocal({ role: 'assistant', content: `📊 ${graph.title || 'Graphique'}` })
               }
             } catch (err) {
               console.error('[Realtime] Graph error:', err)
@@ -123,7 +123,7 @@ export default function useRealtimeVoice() {
           break
       }
     },
-    [addMessage, setCurrentGraph, setWhiteboardContent]
+    [addMessageLocal, setCurrentGraph, setWhiteboardContent]
   )
 
   const connect = useCallback(async () => {
@@ -217,7 +217,18 @@ export default function useRealtimeVoice() {
         }
         log('Connected')
       } catch (err) {
-        setError(err.message)
+        const name = err?.name
+        const raw = err?.message || String(err)
+        let msg = raw
+        if (name === 'NotAllowedError' || /permission denied|not allowed|Permission refusée/i.test(raw)) {
+          msg =
+            "Accès au micro refusé. Autorise le micro pour ce site (icône cadenas ou réglages du navigateur), puis réessaie. Sur téléphone, vérifie aussi que le micro n'est pas utilisé par une autre appli."
+        } else if (name === 'NotFoundError' || /DevicesNotFoundError/i.test(name || raw)) {
+          msg = 'Aucun micro détecté. Branche un micro ou vérifie les paramètres audio du système.'
+        } else if (name === 'SecurityError' || /insecure/i.test(raw)) {
+          msg = 'Le micro nécessite une connexion sécurisée (HTTPS).'
+        }
+        setError(msg)
         cleanup()
       } finally {
         setIsConnecting(false)

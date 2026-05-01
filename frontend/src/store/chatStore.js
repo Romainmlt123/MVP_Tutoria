@@ -6,6 +6,19 @@ import useProfileStore from './profileStore'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+/** Messages Supabase / Postgres plus lisibles côté élève */
+function formatSupabaseWriteError(error) {
+  const msg = (error?.message || '').toLowerCase()
+  if (!msg) return "Erreur d'enregistrement. Réessaie ou reconnecte-toi."
+  if (msg.includes('permission denied') || msg.includes('row-level security') || msg.includes('rls')) {
+    return 'Accès refusé à la base de données (sécurité). Déconnecte-toi puis reconnecte-toi, ou vérifie que ton compte est bien confirmé.'
+  }
+  if (msg.includes('jwt') || msg.includes('expired')) {
+    return 'Session expirée. Rafraîchis la page ou reconnecte-toi.'
+  }
+  return error.message
+}
+
 function getUserContext() {
   const profileContext = buildUserContextForPrompt(useProfileStore.getState().profile)
   const sessionContext = useChatStore.getState().sessionContext
@@ -254,7 +267,7 @@ export const useChatStore = create((set, get) => ({
       .from('messages')
       .insert({ conversation_id: conversationId, role: 'user', content: text })
     if (insertUserErr) {
-      set({ isLoading: false, error: insertUserErr.message })
+      set({ isLoading: false, error: formatSupabaseWriteError(insertUserErr) })
       return
     }
 
