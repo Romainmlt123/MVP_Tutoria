@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { EXPLORER_SUBJECTS } from '../data/curriculum'
+import { EXPLORER_SUBJECTS, getDefaultChapterId } from '../data/curriculum'
+import useProfileStore from '../store/profileStore'
 
 const ISLAND_IMAGES = {
   maths: '/images/ile-mathematique.png',
@@ -8,6 +9,7 @@ const ISLAND_IMAGES = {
 
 export default function Explorer() {
   const navigate = useNavigate()
+  const grade = useProfileStore((s) => s.profile?.settings?.onboarding?.grade) || '2nde'
   const [index, setIndex] = useState(0)
   const subject = EXPLORER_SUBJECTS[index]
 
@@ -20,24 +22,24 @@ export default function Explorer() {
   }, [])
 
   const handleExplore = () => {
-    if (subject.hasCurriculum) {
-      navigate(`/explorer/${subject.id}`)
-    }
+    if (!subject.hasCurriculum) return
+    const chapterId = getDefaultChapterId(subject.id, grade)
+    if (chapterId) navigate(`/explorer/${subject.id}/chapter/${chapterId}`)
   }
 
-  let touchStartX = 0
+  const touchStartXRef = useRef(0)
   const handleTouchStart = (e) => {
-    touchStartX = e.touches[0].clientX
+    touchStartXRef.current = e.touches[0].clientX
   }
   const handleTouchEnd = (e) => {
-    const dx = e.changedTouches[0].clientX - touchStartX
+    const dx = e.changedTouches[0].clientX - touchStartXRef.current
     if (dx > 50) handlePrev()
     else if (dx < -50) handleNext()
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#dce9f5] font-display text-text-primary overflow-hidden">
-      <header className="shrink-0 pt-4 pb-2 px-4 text-center">
+    <div className="min-h-dvh min-h-screen w-full flex flex-col bg-[#dce9f5] font-display text-text-primary overflow-hidden touch-pan-y">
+      <header className="shrink-0 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-2 px-4 text-center">
         <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">
           Explorer
         </h1>
@@ -77,7 +79,7 @@ export default function Explorer() {
             onClick={handleExplore}
             disabled={!subject.hasCurriculum}
             className="relative w-full aspect-[2880/1472] overflow-hidden disabled:cursor-not-allowed"
-            aria-label={`Ouvrir la carte ${subject.label}`}
+            aria-label={`Ouvrir le parcours ${subject.label}`}
           >
             <div className="relative w-full h-full">
               {ISLAND_IMAGES[subject.id] ? (

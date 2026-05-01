@@ -136,6 +136,13 @@ export function getChapter(subjectId, grade, chapterId) {
   return data.chapters.find((c) => c.id === chapterId) ?? null
 }
 
+/** Premier chapitre du programme (parcours direct depuis l’île, sans carte matière). */
+export function getDefaultChapterId(subjectId, grade) {
+  const data = getCurriculum(subjectId, grade)
+  const first = data?.chapters?.[0]
+  return first?.id ?? null
+}
+
 /** Sujets disponibles pour l'Explorer (avec image si disponible) */
 export const EXPLORER_SUBJECTS = [
   { id: 'maths', label: 'Mathématiques', icon: 'calculate', emoji: '📐', hasCurriculum: true },

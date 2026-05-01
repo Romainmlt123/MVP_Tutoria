@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import useAuthStore from './store/authStore'
 import MainLayout from './layouts/MainLayout'
@@ -12,8 +12,9 @@ import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
 import Voice from './pages/Voice'
 import Explorer from './pages/Explorer'
-import ExplorerMap from './pages/ExplorerMap'
 import ExplorerPath from './pages/ExplorerPath'
+import { getDefaultChapterId } from './data/curriculum'
+import useProfileStore from './store/profileStore'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ForgotPassword from './pages/ForgotPassword'
@@ -23,6 +24,15 @@ import NotFound from './pages/NotFound'
 
 const PUBLIC_AUTH_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password']
 const ONBOARDING_PATH = '/onboarding'
+
+/** Ancienne URL /explorer/:subjectId (carte) → premier chapitre du programme. */
+function ExplorerSubjectRedirect() {
+  const { subjectId } = useParams()
+  const grade = useProfileStore((s) => s.profile?.settings?.onboarding?.grade) || '2nde'
+  const chapterId = getDefaultChapterId(subjectId, grade)
+  if (!chapterId) return <Navigate to="/explorer" replace />
+  return <Navigate to={`/explorer/${subjectId}/chapter/${chapterId}`} replace />
+}
 
 function ProtectedRoute({ children }) {
   const location = useLocation()
@@ -75,7 +85,7 @@ export default function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/voice" element={<Voice />} />
         <Route path="/explorer" element={<Explorer />} />
-        <Route path="/explorer/:subjectId" element={<ExplorerMap />} />
+        <Route path="/explorer/:subjectId" element={<ExplorerSubjectRedirect />} />
         <Route path="/explorer/:subjectId/chapter/:chapterId" element={<ExplorerPath />} />
       </Route>
       <Route path="*" element={<NotFound />} />
