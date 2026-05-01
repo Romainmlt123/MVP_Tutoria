@@ -241,7 +241,12 @@ export const useChatStore = create((set, get) => ({
         setError(err.message)
         get().addMessageLocal({ role: 'assistant', content: `❌ Erreur : ${err.message}` })
       } finally {
-        set({ isLoading: false })
+        set((state) => ({
+          isLoading: false,
+          messages: state.messages.map((m) =>
+            m.id?.startsWith('msg-stream-') ? { ...m, id: m.id.replace(/^msg-stream-/, 'msg-') } : m
+          ),
+        }))
       }
       return
     }

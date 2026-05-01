@@ -37,7 +37,7 @@ export default function Voice() {
     : { label: isConnecting ? 'Connexion...' : 'Démarrer', icon: isConnecting ? 'progress_activity' : 'mic', onClick: connect, className: 'bg-primary hover:bg-primary-dark text-white' }
 
   return (
-    <div className="relative flex h-full min-h-dvh min-h-screen w-full flex-col overflow-hidden bg-[radial-gradient(circle_at_30%_20%,#f5f1ff_0%,#f0f2f8_45%,#e9edf7_100%)] font-display text-text-primary antialiased touch-manipulation">
+    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[radial-gradient(circle_at_30%_20%,#f5f1ff_0%,#f0f2f8_45%,#e9edf7_100%)] font-display text-text-primary antialiased touch-manipulation">
       {/* En-tête minimal */}
       <header className="relative z-10 flex w-full shrink-0 items-center justify-between px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-8 sm:py-4">
         <Link to="/chat" className="inline-flex transition-opacity hover:opacity-80">
@@ -61,37 +61,40 @@ export default function Voice() {
         </div>
       </header>
 
-      {/* Contenu généré éventuel */}
-      <main className="relative z-0 flex flex-1 min-h-0 overflow-hidden">
+      {/* Contenu généré + zone vocale */}
+      <main className="relative z-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         {hasContent && (
-          <div className="flex-1 min-w-0 flex flex-col md:flex-row gap-3 overflow-hidden px-4 pb-28">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden px-4 pb-2 pt-1 md:flex-row md:pb-4">
             {showGraphPanel && (
-              <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 <GraphPanel key={graphVersion} fill />
               </div>
             )}
             {showWhiteboard && (
-              <div className="flex flex-col flex-1 min-w-0 min-h-0">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 <WhiteboardPanel />
               </div>
             )}
           </div>
         )}
 
-        {/* Overlay vocal principal */}
-        <div className={`absolute inset-0 z-20 flex flex-col items-center ${hasContent ? 'justify-end pb-28 pointer-events-none' : 'justify-center'} px-4`}>
-          <div className={`${hasContent ? 'mb-4' : 'mb-6'} text-center pointer-events-none`}>
-            <p className="text-sm md:text-base text-text-secondary">{label}</p>
+        <div
+          className={
+            hasContent
+              ? 'pointer-events-none absolute inset-0 z-[5] flex flex-col items-center justify-end px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))] pt-20 lg:pb-28'
+              : 'flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-6'
+          }
+        >
+          <div className={`text-center ${hasContent ? 'mb-2' : 'mb-5'}`}>
+            <p className="text-sm text-text-secondary md:text-base">{label}</p>
           </div>
-          <div className="pointer-events-none">
-            <VoiceOrb status={status} assistantSpeaking={isAssistantSpeaking} size={hasContent ? 'footer' : 'center'} />
-          </div>
+          <VoiceOrb status={status} assistantSpeaking={isAssistantSpeaking} size={hasContent ? 'footer' : 'center'} />
         </div>
       </main>
 
-      {/* Contrôles minimalistes */}
-      <footer className="relative z-30 flex-none min-h-[5.5rem] flex items-center justify-center pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 bg-white/85 backdrop-blur-xl border border-border rounded-full px-2.5 sm:px-3 py-2 shadow-lg max-w-[calc(100vw-1rem)]">
+      {/* Contrôles : dans le flux pour rester au-dessus de la barre mobile fixe */}
+      <footer className="relative z-30 shrink-0 flex flex-col items-center gap-2 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-1 lg:pb-3">
+        <div className="flex flex-wrap items-center justify-center gap-2 bg-white/90 backdrop-blur-xl border border-border rounded-full px-2 py-2 shadow-lg max-w-[min(100%,24rem)]">
           <button
             onClick={primaryAction.onClick}
             disabled={isConnecting}

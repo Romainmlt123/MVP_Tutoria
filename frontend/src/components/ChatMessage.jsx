@@ -45,6 +45,20 @@ const markdownComponents = {
   pre: ({ children }) => <pre className="mb-3 overflow-x-auto">{children}</pre>,
 }
 
+function TypingDots() {
+  return (
+    <div
+      className="flex items-center gap-1.5 py-2 text-primary"
+      aria-live="polite"
+      aria-label="L'IA rédige une réponse"
+    >
+      <span className="chat-typing-dot" />
+      <span className="chat-typing-dot" />
+      <span className="chat-typing-dot" />
+    </div>
+  )
+}
+
 export default function ChatMessage({ message }) {
   if (message.role === 'user') {
     return (
@@ -60,6 +74,10 @@ export default function ChatMessage({ message }) {
     )
   }
 
+  const hasText = Boolean(message.content?.trim())
+  const isStreamingAssistant = message.role === 'assistant' && message.id?.startsWith?.('msg-stream-')
+  const showActions = hasText && !isStreamingAssistant
+
   return (
     <div className="flex gap-4">
       <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center shadow-md text-white" aria-hidden="true">
@@ -70,8 +88,8 @@ export default function ChatMessage({ message }) {
           <span className="text-sm font-bold text-text-primary">Tutor&apos;IA</span>
           <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide">PRO</span>
         </div>
-        <div className="text-text-primary text-[15px] leading-7 space-y-4 pb-4 [&_.katex]:text-[1.05em]">
-          {message.content ? (
+        <div className="text-text-primary text-[15px] leading-7 space-y-4 pb-2 [&_.katex]:text-[1.05em]">
+          {hasText ? (
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeKatex]}
@@ -79,8 +97,10 @@ export default function ChatMessage({ message }) {
             >
               {convertLatexDelimiters(stripJsxGraphBlock(message.content))}
             </ReactMarkdown>
+          ) : isStreamingAssistant ? (
+            <TypingDots />
           ) : (
-            <span className="inline-block text-text-muted animate-pulse">...</span>
+            <span className="inline-block animate-pulse text-text-muted">…</span>
           )}
 
           {message.graph && (
@@ -112,22 +132,31 @@ export default function ChatMessage({ message }) {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3 mt-1">
-          <button className="p-1.5 text-text-muted hover:text-primary hover:bg-primary/5 rounded transition-colors" aria-label="Copier le message">
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">content_copy</span>
-          </button>
-          <button className="p-1.5 text-text-muted hover:text-primary hover:bg-primary/5 rounded transition-colors" aria-label="Régénérer la réponse">
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">refresh</span>
-          </button>
-          <div className="h-4 w-[1px] bg-border mx-1" aria-hidden="true" />
-          <button className="p-1.5 text-text-muted hover:text-green-500 hover:bg-green-50 rounded transition-colors" aria-label="Utile">
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">thumb_up</span>
-          </button>
-          <button className="p-1.5 text-text-muted hover:text-red-400 hover:bg-red-50 rounded transition-colors" aria-label="Pas utile">
-            <span className="material-symbols-outlined text-[18px]" aria-hidden="true">thumb_down</span>
-          </button>
-        </div>
+        {showActions && (
+          <div className="mt-2 flex items-center gap-3 border-t border-border/50 pt-2">
+            <button type="button" className="rounded p-1.5 text-text-muted transition-colors hover:bg-primary/5 hover:text-primary" aria-label="Copier le message">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                content_copy
+              </span>
+            </button>
+            <button type="button" className="rounded p-1.5 text-text-muted transition-colors hover:bg-primary/5 hover:text-primary" aria-label="Régénérer la réponse">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                refresh
+              </span>
+            </button>
+            <div className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
+            <button type="button" className="rounded p-1.5 text-text-muted transition-colors hover:bg-green-50 hover:text-green-600" aria-label="Utile">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                thumb_up
+              </span>
+            </button>
+            <button type="button" className="rounded p-1.5 text-text-muted transition-colors hover:bg-red-50 hover:text-red-500" aria-label="Pas utile">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                thumb_down
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

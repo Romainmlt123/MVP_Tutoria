@@ -74,7 +74,7 @@ export default function Chat() {
   }, [messages, isLoading])
 
   return (
-    <div className="flex h-full w-full bg-gradient-to-b from-slate-50 via-white to-primary/[0.04] font-display text-text-primary antialiased overflow-hidden relative">
+    <div className="flex h-full min-h-0 w-full flex-col bg-gradient-to-b from-slate-50 via-white to-primary/[0.04] font-display text-text-primary antialiased overflow-hidden relative">
       {/* Overlay + tiroir : uniquement sur mobile (sur desktop l'historique est dans la sidebar) */}
       <div
         className={`fixed left-0 right-0 top-0 z-20 bg-black/30 transition-opacity duration-300 lg:hidden bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] ${
@@ -99,7 +99,7 @@ export default function Chat() {
         />
       </div>
 
-      <main className="flex-1 flex flex-col relative h-full min-w-0 flex overflow-hidden">
+      <main className="flex min-h-0 flex-1 flex-col relative h-full min-w-0 overflow-hidden">
         {/* Mode */}
         <header className="min-h-[4.5rem] h-auto py-2 flex items-center justify-center shrink-0 z-10 relative px-2">
           <button
@@ -111,18 +111,30 @@ export default function Chat() {
           >
             <span className="material-symbols-outlined text-[24px]" aria-hidden="true">menu</span>
           </button>
-          <div className="bg-surface border border-border p-1 rounded-full flex shadow-sm max-w-[min(100%,280px)]" role="tablist" aria-label="Mode de conversation">
-            <button role="tab" aria-selected="true" className="px-3 sm:px-6 py-2 min-h-[40px] rounded-full bg-gradient-to-r from-primary to-accent-purple text-white text-xs sm:text-sm font-medium shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation">
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">chat</span>
+          <div
+            className="inline-flex bg-surface/95 border border-border p-0.5 rounded-2xl shadow-sm max-w-[min(100%,300px)] backdrop-blur-sm"
+            role="tablist"
+            aria-label="Mode de conversation"
+          >
+            <span
+              role="tab"
+              aria-selected="true"
+              className="px-4 sm:px-5 py-2 min-h-[40px] rounded-[0.875rem] bg-gradient-to-r from-primary to-accent-purple text-white text-xs sm:text-sm font-semibold shadow-inner flex items-center justify-center gap-1.5 select-none"
+            >
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                chat
+              </span>
               Texte
-            </button>
+            </span>
             <Link
               to="/voice"
               role="tab"
               aria-selected="false"
-              className="px-3 sm:px-6 py-2 min-h-[40px] rounded-full text-text-secondary hover:text-primary text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 touch-manipulation"
+              className="px-4 sm:px-5 py-2 min-h-[40px] rounded-[0.875rem] text-text-secondary hover:text-primary hover:bg-primary/5 text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1.5 touch-manipulation"
             >
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">mic</span>
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
+                mic
+              </span>
               Vocal
             </Link>
           </div>
@@ -134,8 +146,8 @@ export default function Chat() {
         </header>
 
         {/* Zone de chat */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 scroll-smooth z-10 min-w-0 bg-transparent overscroll-y-contain">
-          <div className="max-w-3xl mx-auto flex flex-col gap-6 sm:gap-8 pb-52 sm:pb-56">
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 scroll-smooth z-10 min-w-0 bg-transparent overscroll-y-contain">
+          <div className="max-w-3xl mx-auto flex flex-col gap-6 sm:gap-8 pb-40 sm:pb-44 lg:pb-36">
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px]">error</span>
