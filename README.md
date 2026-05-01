@@ -1,107 +1,146 @@
 # Tutor'IA
 
-**Assistant pédagogique intelligent** — chat texte, mode vocal et graphiques 2D/3D pour apprendre les maths et les sciences.
+Assistant pédagogique intelligent pour réviser en **texte**, en **vocal** et avec des **graphiques interactifs**.
+
+Tutor'IA vise une expérience d'apprentissage plus naturelle : l'élève peut discuter avec l'IA, parler à voix haute, explorer des parcours de révision gamifiés, et visualiser des notions mathématiques en 2D/3D.
 
 ---
 
-## À propos du projet
+## Sommaire
 
-**Tutor'IA** est une application web d’apprentissage qui combine :
-
-- un **chat avec l’IA** (GPT-4o) pour poser des questions et obtenir des explications ;
-- un **mode vocal** (OpenAI Realtime + WebRTC) pour parler naturellement et faire tracer des graphiques à la voix ;
-- des **graphiques interactifs** (JSXGraph) : fonctions, figures géométriques, surfaces et courbes 3D ;
-- des **flashcards** et un **tableau de bord** pour suivre sa progression ;
-- une **authentification** et un stockage des conversations via **Supabase**.
-
-L’objectif : offrir une expérience fluide (texte + voix + visuels) pour réviser et explorer les notions en mathématiques et sciences.
-
----
-
-## Fonctionnalités principales
-
-| Fonctionnalité | Description |
-|----------------|-------------|
-| **Chat texte** | Dialogue avec l’IA (GPT-4o). Les réponses peuvent inclure des graphiques générés automatiquement (bloc `jsxgraph`), affichés dans un panneau dédié sans afficher le JSON. |
-| **Mode vocal** | Connexion WebRTC à l’API OpenAI Realtime : tu parles, l’IA répond à la voix. Détection de fin de prise de parole (VAD), possibilité de demander un graphique à l’oral (ex. « Trace la fonction cosinus »). |
-| **Graphiques 2D / 3D** | Rendu avec JSXGraph : fonctions \( f(x) \), points, segments, polygones, cercles ; en 3D : surfaces \( z = f(x,y) \), courbes paramétriques, sphères. Zoom, pan et rotation 3D. |
-| **Flashcards** | Parcours par matière, révision avec QCM, suivi des résultats. |
-| **Analytics** | Tableau de bord (stats, graphiques de progression). |
-| **Auth & données** | Inscription / connexion (Supabase Auth), profils, conversations et messages persistés en base. |
+- [Vision du projet](#vision-du-projet)
+- [Ce que fait TutorIA](#ce-que-fait-tutoria)
+- [Parcours utilisateur](#parcours-utilisateur)
+- [Architecture technique](#architecture-technique)
+- [Structure du dépôt](#structure-du-dépôt)
+- [Démarrage rapide en local](#démarrage-rapide-en-local)
+- [Configuration détaillée](#configuration-détaillée)
+- [Déploiement](#déploiement)
+- [API backend (résumé)](#api-backend-résumé)
+- [Dépannage](#dépannage)
+- [Roadmap](#roadmap)
+- [Documentation liée](#documentation-liée)
 
 ---
 
-## Stack technique
+## Vision du projet
+
+Les plateformes classiques séparent souvent théorie, exercices et visualisation.  
+Tutor'IA réunit ces briques dans une seule interface :
+
+- **conversation** (texte / voix),
+- **visualisation** (graphiques interactifs),
+- **mémorisation** (flashcards),
+- **progression** (analytics),
+- **parcours gamifié** (Explorer : îles, chapitres, étapes).
+
+Objectif : rendre les révisions plus engageantes, plus guidées et plus adaptées au niveau de l’élève.
+
+---
+
+## Ce que fait Tutor'IA
+
+| Domaine | Fonctionnalités |
+|---|---|
+| **Tutorat IA** | Chat pédagogique avec GPT-4o, réponses explicatives adaptées au profil utilisateur |
+| **Mode vocal** | Conversation temps réel avec OpenAI Realtime (WebRTC), interface orbe vocale |
+| **Graphiques** | Génération et rendu de graphes JSXGraph (2D/3D) depuis le chat et la voix |
+| **Gamification** | Onglet Explorer (îles, chapitres, parcours d'étapes) |
+| **Révisions** | Flashcards, quiz, suivi de progression |
+| **Données** | Auth, profils, conversations, messages, decks via Supabase |
+
+---
+
+## Parcours utilisateur
+
+1. L’utilisateur se connecte / s’inscrit.
+2. Onboarding : niveau, préférences d’apprentissage, classe (2nde/1ère/Terminale).
+3. L’utilisateur choisit son mode :
+   - **Chat** pour poser des questions,
+   - **Voice** pour échanger oralement,
+   - **Explorer** pour suivre un parcours gamifié.
+4. Les échanges et la progression sont conservés (Supabase).
+
+---
+
+## Architecture technique
+
+```mermaid
+flowchart LR
+  User[Utilisateur]
+  Front[Frontend React/Vite]
+  API[Backend FastAPI]
+  OpenAI[OpenAI API\nChat + Realtime]
+  Supa[Supabase\nAuth + Postgres]
+
+  User --> Front
+  Front --> API
+  API --> OpenAI
+  Front --> Supa
+  API --> Supa
+```
+
+### Stack
 
 | Couche | Technologies |
-|--------|--------------|
+|---|---|
 | **Frontend** | React 19, Vite 7, React Router, Tailwind CSS 4, Zustand, JSXGraph |
-| **Backend** | Python 3, FastAPI, Uvicorn, OpenAI API |
-| **Auth & BDD** | Supabase (Auth, Postgres, Realtime optionnel) |
-| **Déploiement** | Frontend → **Vercel** ; Backend → **Render** (Blueprint `render.yaml`) |
+| **Backend** | Python, FastAPI, Uvicorn, OpenAI SDK |
+| **Data/Auth** | Supabase (Auth + Postgres) |
+| **Deploy** | Frontend sur Vercel, backend sur Render |
 
 ---
 
-## Structure du projet
+## Structure du dépôt
 
-```
-├── main.py                 # Point d'entrée backend (uvicorn)
-├── .env                     # Variables d'environnement (ne pas commiter)
-├── render.yaml              # Blueprint Render pour déploiement backend
-│
-├── backend/                 # API FastAPI
-│   ├── app.py               # Routes : /api/chat, /api/realtime/session, /api/realtime/connect
-│   ├── config.py            # Prompts, schéma generate_graph, instructions Realtime
-│   ├── supabase_client.py   # Client Supabase (service role, optionnel)
-│   └── requirements.txt
-│
-├── frontend/                # Application React (Vite)
-│   ├── src/
-│   │   ├── App.jsx          # Routes et protection auth
-│   │   ├── components/      # GraphPanel, ChatMessage, VoiceBars, Sidebar, etc.
-│   │   ├── hooks/           # useRealtimeVoice (WebRTC + OpenAI Realtime)
-│   │   ├── layouts/         # MainLayout
-│   │   ├── pages/           # Home, Chat, Voice, Flashcards, Analytics, Settings, Auth
-│   │   ├── store/           # authStore, chatStore, flashcardStore, profileStore
-│   │   ├── utils/           # graphNormalizer (2D/3D), chart, colors
-│   │   └── lib/             # supabase.js
-│   ├── package.json
-│   ├── vite.config.js
-│   └── vercel.json          # Rewrites SPA pour Vercel
-│
-├── docs/                    # Documentation
-│   ├── DEPLOY_VERCEL.md     # Déployer le frontend sur Vercel + VITE_API_URL
-│   ├── DEPLOY_RENDER.md     # Déployer le backend sur Render (gratuit)
-│   ├── VOICE_DIAGNOSTIC.md  # Dépannage mode vocal
-│   ├── SUPABASE_SETUP.md    # Configuration Supabase
+```text
+.
+├── main.py                      # Point d'entrée backend
+├── render.yaml                  # Blueprint Render
+├── backend/
+│   ├── app.py                   # Routes API (chat, stream, realtime, health)
+│   ├── config.py                # Prompts, schemas outils, instructions
+│   ├── requirements.txt
 │   └── ...
-│
-├── supabase/migrations/     # Schéma BDD (profiles, conversations, messages, flashcards)
-├── scripts/                  # Tests (test_api.py, test_voice.py)
-└── Maquette_frontend/       # Maquettes UI
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── pages/               # Home, Chat, Voice, Explorer, Flashcards...
+│   │   ├── components/          # UI réutilisable (GraphPanel, VoiceOrb, etc.)
+│   │   ├── hooks/               # ex: useRealtimeVoice
+│   │   ├── store/               # Zustand stores (auth, chat, profile...)
+│   │   ├── data/                # curriculum Explorer, mock data
+│   │   ├── utils/
+│   │   └── lib/                 # clients externes (supabase)
+│   ├── package.json
+│   └── vercel.json
+├── docs/                        # Guides de setup/deploy/diagnostic
+├── supabase/migrations/         # Schéma base de données
+├── Programmes/                  # Références programmes officiels
+├── images/                      # Assets visuels source
+└── maquettes/                   # Maquettes UI
 ```
 
 ---
 
-## Démarrage en local
+## Démarrage rapide en local
 
 ### Prérequis
 
-- **Python 3.10+**
-- **Node.js 18+**
-- Clé API **OpenAI**
-- (Optionnel) Projet **Supabase** pour auth et BDD
+- Node.js 18+
+- Python 3.10+
+- Une clé OpenAI
+- (Optionnel) Un projet Supabase
 
 ### Installation
 
 ```bash
-# Cloner le dépôt
 git clone https://github.com/Romainmlt123/MVP_Tutoria.git
 cd MVP_Tutoria
 
 # Backend
 python -m venv venv
-source venv/bin/activate   # Windows : venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r backend/requirements.txt
 
 # Frontend
@@ -110,18 +149,41 @@ npm install
 cd ..
 ```
 
-### Variables d'environnement
+### Lancer l’app
 
-**À la racine** (backend), créer `.env` :
+Terminal A (backend) :
+
+```bash
+python main.py
+```
+
+Terminal B (frontend) :
+
+```bash
+cd frontend
+npm run dev
+```
+
+Accès :
+
+- Frontend : `http://localhost:5173`
+- Backend : `http://localhost:8000`
+- Docs API : `http://localhost:8000/docs`
+
+---
+
+## Configuration détaillée
+
+### Variables backend (`.env` à la racine)
 
 ```env
 OPENAI_API_KEY=sk-...
-PORT=8000
 HOST=0.0.0.0
+PORT=8000
 DEBUG=true
 ```
 
-**Dans `frontend/`** (optionnel en local), créer `frontend/.env` :
+### Variables frontend (`frontend/.env`)
 
 ```env
 VITE_API_URL=http://localhost:8000
@@ -129,64 +191,85 @@ VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 ```
 
-Sans `VITE_API_URL`, le frontend utilise par défaut `http://localhost:8000`.
+Notes :
 
-### Lancer l'application
-
-**Terminal 1 — Backend :**
-
-```bash
-python main.py
-```
-
-- API : http://localhost:8000  
-- Docs : http://localhost:8000/docs  
-
-**Terminal 2 — Frontend :**
-
-```bash
-cd frontend && npm run dev
-```
-
-- App : http://localhost:5173  
+- si `VITE_API_URL` est absent, fallback vers `http://localhost:8000`,
+- si Supabase n’est pas configuré, certaines fonctions (auth/persistence) sont désactivées.
 
 ---
 
 ## Déploiement
 
-| Cible | Plateforme | Documentation |
-|-------|------------|----------------|
-| **Frontend** | Vercel | [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) |
-| **Backend** | Render | [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) |
+| Cible | Plateforme | Guide |
+|---|---|---|
+| Frontend | Vercel | [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) |
+| Backend | Render | [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) |
 
-- **Vercel** : Root Directory = `frontend`. Variables : `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, **`VITE_API_URL`** (URL du backend en prod, ex. `https://tutoria-api.onrender.com`).
-- **Render** : le fichier `render.yaml` à la racine permet de créer le service en un clic (Blueprint). Ajouter **OPENAI_API_KEY** dans l’onglet Environment.
+### Résumé
 
-Un **push** sur la branche connectée déclenche le déploiement du frontend (Vercel) et du backend (Render).
+- **Vercel**
+  - Root directory : `frontend`
+  - Vars : `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+- **Render**
+  - Service via `render.yaml`
+  - Var minimum : `OPENAI_API_KEY`
 
----
-
-## API (résumé)
-
-| Méthode | Route | Description |
-|---------|-------|-------------|
-| GET | `/health` | Health check (déploiement, monitoring). |
-| POST | `/api/chat` | Chat texte. Body : `{ "messages": [ { "role", "content" }, ... ] }`. Réponse : `{ "content", "graph" }` (extraction du bloc `jsxgraph`). |
-| POST | `/api/realtime/session` | Création d’un token éphémère pour WebRTC (client_secret). |
-| POST | `/api/realtime/connect` | Proxy SDP : envoi de l’offer client vers OpenAI Realtime, retour de l’answer. |
-
-Le frontend utilise le token de session puis appelle **directement** `https://api.openai.com/v1/realtime/calls` pour le flux audio (WebRTC).
+Un push sur la branche connectée déclenche le redeploy.
 
 ---
 
-## Documentation
+## API backend (résumé)
 
-- [docs/README.md](docs/README.md) — Index de la documentation
-- [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md) — Déploiement frontend (Vercel + CORS / VITE_API_URL)
-- [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) — Déploiement backend (Render, gratuit)
-- [docs/VOICE_DIAGNOSTIC.md](docs/VOICE_DIAGNOSTIC.md) — Dépannage mode vocal
-- [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) — Configuration Supabase
-- [PATCHLOG.md](PATCHLOG.md) — Erreurs rencontrées et correctifs
+| Méthode | Route | Usage |
+|---|---|---|
+| `GET` | `/health` | Vérification santé service |
+| `POST` | `/api/chat` | Réponse complète (non stream) |
+| `POST` | `/api/chat/stream` | Réponse stream SSE |
+| `POST` | `/api/realtime/session` | Token éphémère voice |
+| `POST` | `/api/realtime/connect` | Négociation SDP WebRTC |
+
+---
+
+## Dépannage
+
+### Le frontend n’atteint pas le backend
+
+- vérifier `VITE_API_URL`,
+- vérifier CORS backend,
+- vérifier que le backend écoute bien sur le port attendu.
+
+### Erreurs mode vocal
+
+- vérifier micro/autorisations navigateur,
+- vérifier la route `/api/realtime/session`,
+- consulter [docs/VOICE_DIAGNOSTIC.md](docs/VOICE_DIAGNOSTIC.md).
+
+### Erreurs de login (`Failed to fetch`)
+
+- vérifier `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY`,
+- vérifier que le projet Supabase n’est pas en pause,
+- vérifier les URLs autorisées côté Supabase Auth.
+
+---
+
+## Roadmap
+
+- enrichir Explorer pour toutes les matières et classes,
+- générer automatiquement les parcours depuis les programmes officiels,
+- renforcer l’évaluation (boss) avec scoring et progression,
+- améliorer l’UX voice (transcript live, commandes vocales avancées),
+- optimiser le découpage frontend (chunks > 500 kB).
+
+---
+
+## Documentation liée
+
+- [docs/README.md](docs/README.md)
+- [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md)
+- [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md)
+- [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)
+- [docs/VOICE_DIAGNOSTIC.md](docs/VOICE_DIAGNOSTIC.md)
+- [PATCHLOG.md](PATCHLOG.md)
 
 ---
 
@@ -196,4 +279,4 @@ Projet à usage éducatif / privé.
 
 ---
 
-**Dépôt :** [github.com/Romainmlt123/MVP_Tutoria](https://github.com/Romainmlt123/MVP_Tutoria)
+Dépôt GitHub : [github.com/Romainmlt123/MVP_Tutoria](https://github.com/Romainmlt123/MVP_Tutoria)
