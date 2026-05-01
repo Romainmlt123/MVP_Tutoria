@@ -77,14 +77,14 @@ export default function Chat() {
     <div className="flex h-full w-full bg-gradient-to-b from-slate-50 via-white to-primary/[0.04] font-display text-text-primary antialiased overflow-hidden relative">
       {/* Overlay + tiroir : uniquement sur mobile (sur desktop l'historique est dans la sidebar) */}
       <div
-        className={`fixed left-0 right-0 top-0 bottom-0 z-20 bg-black/30 transition-opacity duration-300 lg:hidden ${
+        className={`fixed left-0 right-0 top-0 z-20 bg-black/30 transition-opacity duration-300 lg:hidden bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] ${
           historyOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden="true"
         onClick={() => setHistoryOpen(false)}
       />
       <div
-        className={`fixed left-0 top-0 bottom-20 z-30 w-full max-w-[min(100%,320px)] transform transition-transform duration-300 ease-out lg:hidden ${
+        className={`fixed left-0 top-0 z-30 w-full max-w-[min(100%,320px)] transform transition-transform duration-300 ease-out lg:hidden bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] ${
           historyOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-modal="true"
@@ -101,18 +101,18 @@ export default function Chat() {
 
       <main className="flex-1 flex flex-col relative h-full min-w-0 flex overflow-hidden">
         {/* Mode */}
-        <header className="h-20 flex items-center justify-center shrink-0 z-10 relative">
+        <header className="min-h-[4.5rem] h-auto py-2 flex items-center justify-center shrink-0 z-10 relative px-2">
           <button
             type="button"
             onClick={() => setHistoryOpen((o) => !o)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-lg text-text-muted hover:text-primary hover:bg-primary/5 transition-colors lg:hidden"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-2.5 min-h-[44px] min-w-[44px] rounded-lg text-text-muted hover:text-primary hover:bg-primary/5 transition-colors lg:hidden touch-manipulation"
             aria-label={historyOpen ? 'Fermer l\'historique' : 'Ouvrir l\'historique des conversations'}
             aria-expanded={historyOpen}
           >
             <span className="material-symbols-outlined text-[24px]" aria-hidden="true">menu</span>
           </button>
-          <div className="bg-surface border border-border p-1 rounded-full flex shadow-sm" role="tablist" aria-label="Mode de conversation">
-            <button role="tab" aria-selected="true" className="px-6 py-1.5 rounded-full bg-gradient-to-r from-primary to-accent-purple text-white text-sm font-medium shadow-sm transition-all flex items-center gap-2">
+          <div className="bg-surface border border-border p-1 rounded-full flex shadow-sm max-w-[min(100%,280px)]" role="tablist" aria-label="Mode de conversation">
+            <button role="tab" aria-selected="true" className="px-3 sm:px-6 py-2 min-h-[40px] rounded-full bg-gradient-to-r from-primary to-accent-purple text-white text-xs sm:text-sm font-medium shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation">
               <span className="material-symbols-outlined text-[16px]" aria-hidden="true">chat</span>
               Texte
             </button>
@@ -120,22 +120,22 @@ export default function Chat() {
               to="/voice"
               role="tab"
               aria-selected="false"
-              className="px-6 py-1.5 rounded-full text-text-secondary hover:text-primary text-sm font-medium transition-all flex items-center gap-2"
+              className="px-3 sm:px-6 py-2 min-h-[40px] rounded-full text-text-secondary hover:text-primary text-xs sm:text-sm font-medium transition-all flex items-center justify-center gap-1.5 touch-manipulation"
             >
               <span className="material-symbols-outlined text-[16px]" aria-hidden="true">mic</span>
               Vocal
             </Link>
           </div>
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <button className="p-2 text-text-muted hover:text-primary hover:bg-primary/5 rounded-lg transition-colors" aria-label="Partager la conversation">
+          <div className="absolute right-2 sm:right-8 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            <button type="button" className="p-2.5 min-h-[44px] min-w-[44px] text-text-muted hover:text-primary hover:bg-primary/5 rounded-lg transition-colors touch-manipulation" aria-label="Partager la conversation">
               <span className="material-symbols-outlined text-[20px]" aria-hidden="true">ios_share</span>
             </button>
           </div>
         </header>
 
         {/* Zone de chat */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth z-10 min-w-0 bg-transparent">
-          <div className="max-w-3xl mx-auto flex flex-col gap-8 pb-56">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 scroll-smooth z-10 min-w-0 bg-transparent overscroll-y-contain">
+          <div className="max-w-3xl mx-auto flex flex-col gap-6 sm:gap-8 pb-52 sm:pb-56">
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px]">error</span>

@@ -86,18 +86,18 @@ export default function Home() {
       : quickAccessSubjects
 
   return (
-    <div className="container mx-auto max-w-7xl px-6 py-8 lg:px-12">
+    <div className="container mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-12">
       {/* En-tête */}
-      <header className="mb-10">
-        <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-text-primary mb-3">
+      <header className="mb-6 sm:mb-10">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-text-primary mb-3 leading-tight">
           {greeting},{' '}
           <span className="bg-gradient-to-r from-primary to-accent-purple bg-clip-text text-transparent">
             {displayName}
           </span>
         </h1>
-        <blockquote className="relative pl-6 border-l-2 border-primary/30">
-          <span className="absolute -left-1 top-0 text-4xl text-primary/25 font-serif leading-none select-none" aria-hidden="true">"</span>
-          <p className="text-text-secondary text-lg font-light italic">
+        <blockquote className="relative pl-4 sm:pl-6 border-l-2 border-primary/30">
+          <span className="absolute -left-1 top-0 text-3xl sm:text-4xl text-primary/25 font-serif leading-none select-none" aria-hidden="true">"</span>
+          <p className="text-text-secondary text-base sm:text-lg font-light italic leading-relaxed">
             {quote.text}
           </p>
           <cite className="not-italic text-sm text-primary/80 font-medium block mt-2">
@@ -109,8 +109,8 @@ export default function Home() {
       {/* Grille */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:grid-rows-[auto_auto]">
         {/* Carte principale : dernière conversation ou CTA */}
-        <div className="relative overflow-hidden rounded-2xl lg:col-span-8 group min-h-[280px] flex flex-col md:flex-row bg-gradient-to-r from-primary via-[#7c6cf0] to-accent-purple text-white shadow-xl shadow-primary/20">
-          <div className="relative z-10 flex flex-1 flex-col justify-center p-8">
+        <div className="relative overflow-hidden rounded-2xl lg:col-span-8 group min-h-[240px] sm:min-h-[280px] flex flex-col md:flex-row bg-gradient-to-r from-primary via-[#7c6cf0] to-accent-purple text-white shadow-xl shadow-primary/20">
+          <div className="relative z-10 flex flex-1 flex-col justify-center p-5 sm:p-8">
             {conversationsLoading ? (
               <div className="flex items-center gap-2 text-white/80">
                 <span className="material-symbols-outlined animate-spin">progress_activity</span>
@@ -123,7 +123,7 @@ export default function Home() {
                     Dernière conversation
                   </span>
                 </div>
-                <h2 className="mb-1 text-3xl font-bold">
+                <h2 className="mb-1 text-2xl sm:text-3xl font-bold line-clamp-2">
                   {lastConversation.title || 'Conversation'}
                 </h2>
                 <p className="mb-6 max-w-md text-white/80">
@@ -147,7 +147,7 @@ export default function Home() {
                     Tutor&apos;IA
                   </span>
                 </div>
-                <h2 className="mb-1 text-3xl font-bold">Démarrer une conversation</h2>
+                <h2 className="mb-1 text-2xl sm:text-3xl font-bold">Démarrer une conversation</h2>
                 <p className="mb-6 max-w-md text-white/80">
                   Pose tes questions en maths ou en sciences, demande un graphique ou utilise le mode vocal.
                 </p>

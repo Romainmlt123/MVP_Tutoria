@@ -8,11 +8,11 @@ import useRealtimeVoice from '../hooks/useRealtimeVoice'
 import useChatStore from '../store/chatStore'
 
 const STATUS_CONFIG = {
-  connecting: { icon: 'progress_activity', iconClass: 'text-amber-600 animate-spin text-[24px]', label: 'Connexion en cours...' },
-  error: { icon: 'mic_off', iconClass: 'text-red-500 text-[24px]', label: '' },
-  ready: { icon: 'mic', iconClass: 'text-green-600 text-[24px]', label: "Parle, je t'écoute !" },
-  speaking: { icon: 'mic', iconClass: 'text-primary text-[24px]', label: "Je t'écoute..." },
-  disconnected: { icon: 'mic_off', iconClass: 'text-slate-400 text-[24px]', label: 'Déconnecté' },
+  connecting: { label: 'Connexion...' },
+  error: { label: 'Erreur de connexion' },
+  ready: { label: "Prêt à écouter" },
+  speaking: { label: 'Tu peux parler' },
+  disconnected: { label: 'Déconnecté' },
 }
 
 export default function Voice() {
@@ -31,33 +31,40 @@ export default function Voice() {
   const status = isConnecting ? 'connecting' : error ? 'error' : isConnected ? (isSpeaking ? 'speaking' : 'ready') : 'disconnected'
   const label = status === 'error' ? error : STATUS_CONFIG[status].label
   const hasContent = showGraphPanel || showWhiteboard
+
+  const primaryAction = isConnected
+    ? { label: 'Terminer', icon: 'call_end', onClick: disconnect, className: 'bg-red-500 hover:bg-red-600 text-white' }
+    : { label: isConnecting ? 'Connexion...' : 'Démarrer', icon: isConnecting ? 'progress_activity' : 'mic', onClick: connect, className: 'bg-primary hover:bg-primary-dark text-white' }
+
   return (
-    <div className="relative flex h-full min-h-[80vh] w-full flex-col overflow-hidden bg-gradient-to-br from-[#f0f2f8] via-white to-[#ede7f6] font-display text-text-primary antialiased">
-      {/* En-tête */}
-      <header className="relative z-10 flex w-full shrink-0 items-center justify-between px-6 py-4 md:px-10">
+    <div className="relative flex h-full min-h-dvh min-h-screen w-full flex-col overflow-hidden bg-[radial-gradient(circle_at_30%_20%,#f5f1ff_0%,#f0f2f8_45%,#e9edf7_100%)] font-display text-text-primary antialiased touch-manipulation">
+      {/* En-tête minimal */}
+      <header className="relative z-10 flex w-full shrink-0 items-center justify-between px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-8 sm:py-4">
         <Link to="/chat" className="inline-flex transition-opacity hover:opacity-80">
           <Logo subtitle={null} />
         </Link>
-        <div
-          className={`flex items-center gap-2 rounded-full px-3 py-1.5 backdrop-blur-sm border shadow-sm ${
-            isConnected ? 'bg-green-50 border-green-200' : 'bg-white/80 border-border'
-          }`}
-        >
-          <div
-            className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`}
-            aria-hidden="true"
-          />
-          <span className="text-xs font-medium text-text-secondary uppercase tracking-widest">
+        <div className="flex items-center gap-3">
+          <span className={`text-xs font-medium px-3 py-1 rounded-full border ${
+            isConnected
+              ? 'bg-green-50 border-green-200 text-green-700'
+              : 'bg-white/80 border-border text-text-secondary'
+          }`}>
             {isConnected ? 'En direct' : 'Hors ligne'}
           </span>
+          <Link
+            to="/chat"
+            className="w-9 h-9 rounded-full border border-border bg-white/80 backdrop-blur flex items-center justify-center text-text-secondary hover:text-text-primary"
+            aria-label="Quitter le mode vocal"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </Link>
         </div>
       </header>
 
-      {/* Zone principale : graph + whiteboard OU écran centré ; zone vocale en bas à droite quand contenu */}
-      <main className="relative z-10 flex flex-1 min-h-0 overflow-hidden">
-        {/* Grande zone : graphique à gauche, tableau blanc à droite (quand les deux sont utilisés) */}
+      {/* Contenu généré éventuel */}
+      <main className="relative z-0 flex flex-1 min-h-0 overflow-hidden">
         {hasContent && (
-          <div className="flex-1 min-w-0 flex flex-col md:flex-row gap-4 overflow-hidden pr-4 pb-4">
+          <div className="flex-1 min-w-0 flex flex-col md:flex-row gap-3 overflow-hidden px-4 pb-28">
             {showGraphPanel && (
               <div className="flex-1 min-w-0 min-h-0 flex flex-col">
                 <GraphPanel key={graphVersion} fill />
@@ -71,125 +78,44 @@ export default function Voice() {
           </div>
         )}
 
-        {/* Zone vocale : centrée quand pas de graph ni whiteboard */}
-        {!hasContent && (
-          <div className="flex flex-1 flex-col items-center justify-center px-4">
-            <div className="mb-8 text-center">
-              <h2 className="text-xl font-light text-text-primary md:text-2xl lg:text-3xl animate-pulse-slow tracking-wide">
-                Tutor&apos;IA vous écoute...
-              </h2>
-            </div>
-            <p className="text-center font-medium text-text-primary max-w-sm mb-6">
-              {label}
-            </p>
-            {/* Orbe vibrante au centre */}
-            <div className="mb-8">
-              <VoiceOrb status={status} assistantSpeaking={isAssistantSpeaking} size="center" />
-            </div>
-            <div className="flex flex-wrap justify-center gap-3">
-              {!isConnected && !isConnecting && (
-                <button
-                  onClick={connect}
-                  className="px-6 py-2.5 bg-primary text-white rounded-full font-medium hover:opacity-90 transition-all flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[20px]">link</span>
-                  Connecter
-                </button>
-              )}
-              {isConnected && (
-                <button
-                  onClick={disconnect}
-                  className="px-6 py-2.5 bg-red-500 text-white rounded-full font-medium hover:bg-red-600 transition-all flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[20px]">call_end</span>
-                  Raccrocher
-                </button>
-              )}
-              {error && (
-                <button
-                  onClick={connect}
-                  className="px-6 py-2.5 bg-slate-600 text-white rounded-full font-medium hover:bg-slate-700 transition-all flex items-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-[20px]">refresh</span>
-                  Réessayer
-                </button>
-              )}
-            </div>
+        {/* Overlay vocal principal */}
+        <div className={`absolute inset-0 z-20 flex flex-col items-center ${hasContent ? 'justify-end pb-28 pointer-events-none' : 'justify-center'} px-4`}>
+          <div className={`${hasContent ? 'mb-4' : 'mb-6'} text-center pointer-events-none`}>
+            <p className="text-sm md:text-base text-text-secondary">{label}</p>
           </div>
-        )}
+          <div className="pointer-events-none">
+            <VoiceOrb status={status} assistantSpeaking={isAssistantSpeaking} size={hasContent ? 'footer' : 'center'} />
+          </div>
+        </div>
       </main>
 
-      {/* Footer selon maquette_version2 : 3 colonnes (micro, barres, quitter) */}
-      <footer className="relative z-20 flex-none h-24 bg-white border-t border-border grid grid-cols-3 items-center px-8 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        {/* Colonne gauche : Micro + texte */}
-        <div className="justify-self-start flex items-center gap-4">
+      {/* Contrôles minimalistes */}
+      <footer className="relative z-30 flex-none min-h-[5.5rem] flex items-center justify-center pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 bg-white/85 backdrop-blur-xl border border-border rounded-full px-2.5 sm:px-3 py-2 shadow-lg max-w-[calc(100vw-1rem)]">
           <button
-            className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-              isConnected
-                ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                : 'bg-slate-100 text-text-muted hover:bg-slate-200'
-            }`}
-            aria-label="Microphone"
+            onClick={primaryAction.onClick}
+            disabled={isConnecting}
+            className={`flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-full font-medium transition-all disabled:opacity-70 ${primaryAction.className}`}
           >
-            <span className="material-symbols-outlined text-2xl">
-              {isConnected ? 'mic' : 'mic_off'}
-            </span>
+            <span className={`material-symbols-outlined text-[20px] ${isConnecting ? 'animate-spin' : ''}`}>{primaryAction.icon}</span>
+            {primaryAction.label}
           </button>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-text-primary leading-tight">
-              {isConnected ? (isAssistantSpeaking ? "IA en train de parler..." : "En écoute...") : "Hors ligne"}
-            </span>
-            <span className="text-xs text-text-muted">
-              {isConnected ? "Microphone actif" : "Microphone désactivé"}
-            </span>
-          </div>
-        </div>
-
-        {/* Colonne centre : orbe compacte quand du contenu est affiché */}
-        <div className="justify-self-center">
-          {hasContent && (
-            <VoiceOrb status={status} assistantSpeaking={isAssistantSpeaking} size="footer" />
-          )}
-        </div>
-
-        {/* Colonne droite : Bouton quitter */}
-        <div className="justify-self-end">
-          {!isConnected && !isConnecting && (
-            <button
-              onClick={connect}
-              className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl transition-all duration-200 font-medium shadow-md shadow-primary/20 active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[20px]">link</span>
-              Connecter
-            </button>
-          )}
-          {isConnected && (
-            <button
-              onClick={disconnect}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all duration-200 font-medium shadow-md shadow-red-600/20 active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[20px]">call_end</span>
-              Raccrocher
-            </button>
-          )}
           {error && (
             <button
               onClick={connect}
-              className="flex items-center gap-2 px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl transition-all duration-200 font-medium shadow-md active:scale-95"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full font-medium bg-slate-100 text-text-primary hover:bg-slate-200 transition-all"
             >
               <span className="material-symbols-outlined text-[20px]">refresh</span>
               Réessayer
             </button>
           )}
-          {!isConnected && !isConnecting && !error && (
-            <Link
-              to="/chat"
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all duration-200 font-medium shadow-md shadow-red-600/20 active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
-              Quitter le mode vocal
-            </Link>
-          )}
+          <Link
+            to="/chat"
+            className="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+            aria-label="Quitter le mode vocal"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </Link>
         </div>
       </footer>
     </div>

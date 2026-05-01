@@ -41,16 +41,16 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-gradient-to-br from-slate-50 via-white to-primary/[0.06]">
+    <div className="flex min-h-dvh min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-primary/[0.06] pt-[env(safe-area-inset-top,0px)]">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto relative flex flex-col pb-20 lg:pb-0">
+      <main className="flex-1 overflow-y-auto relative flex flex-col pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
         {emailNotConfirmed && !bannerDismissed && (
-          <div className="shrink-0 flex items-center justify-between gap-4 px-4 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="material-symbols-outlined text-amber-600 shrink-0">mail</span>
-              <span>Vérifie ton email pour confirmer ton compte. Vérifie aussi tes spams.</span>
+          <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 px-4 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
+            <div className="flex items-start sm:items-center gap-2 min-w-0">
+              <span className="material-symbols-outlined text-amber-600 shrink-0 mt-0.5 sm:mt-0">mail</span>
+              <span className="leading-snug">Vérifie ton email pour confirmer ton compte. Vérifie aussi tes spams.</span>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <button
                 type="button"
                 onClick={handleResend}

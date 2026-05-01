@@ -142,3 +142,16 @@
   background: rgba(108, 92, 231, 0.2);
   color: #2d3436;
 }
+
+/* Mobile-first: éviter zoom iOS sur inputs, barre de nav scrollable */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

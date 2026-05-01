@@ -39,7 +39,7 @@ export default function ChatInput({ onSend, disabled, initialMessage, onInitialM
   }
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 pt-6 z-30 flex justify-center pointer-events-none bg-background">
+    <div className="absolute bottom-0 left-0 right-0 px-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-4 sm:pt-6 z-30 flex justify-center pointer-events-none bg-gradient-to-t from-background via-background to-transparent">
       <div className="w-full max-w-3xl pointer-events-auto">
         <form
           onSubmit={handleSubmit}

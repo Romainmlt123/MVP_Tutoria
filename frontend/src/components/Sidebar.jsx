@@ -9,6 +9,7 @@ const navItems = [
   { to: '/', icon: 'home', label: 'Accueil' },
   { to: '/explorer', icon: 'travel_explore', label: 'Explorer' },
   { to: '/chat', icon: 'chat_bubble', label: "Tutor'IA" },
+  { to: '/voice', icon: 'mic', label: 'Vocal' },
   { to: '/flashcards', icon: 'style', label: 'Flashcards' },
   { to: '/analytics', icon: 'analytics', label: 'Tableau de bord' },
 ]
