@@ -22,7 +22,7 @@ export default function ExplorerPath() {
 
   if (!chapter) {
     return (
-      <div className="min-h-dvh min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-sky-100 to-white">
+      <div className="flex h-full min-h-0 flex-col items-center justify-center bg-gradient-to-b from-sky-100 to-white p-6">
         <p className="text-text-secondary text-center mb-6">Chapitre introuvable.</p>
         <button
           type="button"
@@ -41,47 +41,29 @@ export default function ExplorerPath() {
   }
 
   return (
-    <div className="min-h-dvh min-h-screen flex flex-col bg-gradient-to-b from-amber-50 via-white to-primary/5 font-display text-text-primary">
-      <header className="relative shrink-0 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-2 px-4 border-b border-border bg-white/80 backdrop-blur">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#70ad42] font-display text-text-primary">
+      <header className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-start justify-between gap-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
         <button
           type="button"
           onClick={() => navigate('/explorer')}
-          className="flex items-center gap-2 text-text-secondary hover:text-primary mb-2"
+          className="pointer-events-auto flex min-h-11 items-center gap-1.5 rounded-full bg-white/90 px-3 py-2 text-sm font-semibold text-text-secondary shadow-md backdrop-blur transition-colors hover:text-primary"
+          aria-label="Retour aux îles"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
-          Retour aux îles
+          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+          <span className="hidden sm:inline">Îles</span>
         </button>
-        <h1 className="text-xl md:text-2xl font-bold text-text-primary">{chapter.name}</h1>
-        <p className="text-text-secondary text-sm">
-          Parcours sur grille • Tuiles avec cercles : touche un niveau pour ouvrir le chat
-        </p>
+        <div className="pointer-events-auto max-w-[min(70vw,28rem)] rounded-2xl bg-white/90 px-4 py-2 text-right shadow-md backdrop-blur">
+          <h1 className="truncate text-sm font-bold text-text-primary sm:text-base">{chapter.name}</h1>
+          <p className="text-[11px] font-medium text-text-secondary sm:text-xs">Départ en bas, arrivée en haut</p>
+        </div>
       </header>
 
-      <div className="relative flex-1 overflow-hidden px-3 sm:px-4 pb-6 pt-4 flex flex-col items-center min-h-0">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <LevelMap
           key={`${subjectId}-${chapterId}`}
           nodes={chapter.nodes}
           onLevelClick={(node) => handleLevelClick(node)}
         />
-
-        <div className="mt-4 flex flex-wrap justify-center gap-6 text-sm text-text-secondary">
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-blue-500 ring-2 ring-white shadow" />
-            Leçon (bleu)
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-green-500 ring-2 ring-white shadow" />
-            Exercice (vert)
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-red-500 ring-2 ring-white shadow" />
-            Boss (rouge)
-          </span>
-          <span className="flex items-center gap-2 opacity-70">
-            <span className="w-4 h-4 rounded-full bg-slate-400 ring-2 ring-white shadow" />
-            Verrouillé (gris)
-          </span>
-        </div>
       </div>
     </div>
   )

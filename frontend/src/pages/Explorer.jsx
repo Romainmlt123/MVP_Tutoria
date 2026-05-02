@@ -4,7 +4,7 @@ import { EXPLORER_SUBJECTS, getDefaultChapterId } from '../data/curriculum'
 import useProfileStore from '../store/profileStore'
 
 const ISLAND_IMAGES = {
-  maths: '/images/ile-mathematique.png',
+  maths: '/images/ile_math.png',
 }
 
 export default function Explorer() {
@@ -38,70 +38,58 @@ export default function Explorer() {
   }
 
   return (
-    <div className="min-h-dvh min-h-screen w-full flex flex-col bg-[#dce9f5] font-display text-text-primary overflow-hidden touch-pan-y">
-      <header className="shrink-0 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-2 px-4 text-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">
-          Explorer
-        </h1>
-        <p className="text-text-secondary text-sm mt-1">
-          Choisis une matière pour découvrir ton parcours
-        </p>
-      </header>
-
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] font-display text-text-primary touch-pan-y lg:pb-0">
       <div
-        className="flex-1 flex flex-col items-center justify-center px-4 py-4 min-h-0"
+        className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-6"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         {/* Slider / Carousel */}
-        <div className="relative w-full max-w-3xl overflow-visible">
+        <div className="relative flex w-full max-w-3xl flex-col items-center overflow-visible">
+          <div className="mb-10 rounded-full bg-red-500 px-10 py-4 text-center text-2xl font-extrabold tracking-wide text-white shadow-sm sm:text-3xl">
+            {subject.label}
+          </div>
+
           {/* Flèches */}
           <button
             type="button"
             onClick={handlePrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-primary hover:bg-white transition-colors -translate-x-2"
+            className="absolute left-0 top-1/2 z-10 flex h-12 w-12 -translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-300 bg-slate-200/90 text-white shadow-sm transition-colors hover:bg-slate-300 sm:h-14 sm:w-14"
             aria-label="Matière précédente"
           >
-            <span className="material-symbols-outlined text-[28px]">chevron_left</span>
+            <span className="material-symbols-outlined text-[32px]">chevron_left</span>
           </button>
           <button
             type="button"
             onClick={handleNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-primary hover:bg-white transition-colors translate-x-2"
+            className="absolute right-0 top-1/2 z-10 flex h-12 w-12 translate-x-2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-300 bg-slate-200/90 text-white shadow-sm transition-colors hover:bg-slate-300 sm:h-14 sm:w-14"
             aria-label="Matière suivante"
           >
-            <span className="material-symbols-outlined text-[28px]">chevron_right</span>
+            <span className="material-symbols-outlined text-[32px]">chevron_right</span>
           </button>
 
-          {/* Île : image brute, sans carte/section */}
           <button
             type="button"
             onClick={handleExplore}
             disabled={!subject.hasCurriculum}
-            className="relative w-full aspect-[2880/1472] overflow-hidden disabled:cursor-not-allowed"
+            className="relative w-full max-w-[36rem] cursor-pointer overflow-visible disabled:cursor-not-allowed disabled:opacity-70"
             aria-label={`Ouvrir le parcours ${subject.label}`}
           >
-            <div className="relative w-full h-full">
-              {ISLAND_IMAGES[subject.id] ? (
-                <img
-                  src={ISLAND_IMAGES[subject.id]}
-                  alt={`Île ${subject.label}`}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/20 to-accent-purple/20">
-                  <span className="text-3xl mb-2" aria-hidden="true">{subject.emoji}</span>
-                  <span className="text-2xl font-bold text-text-primary">{subject.label}</span>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <h2 className="text-xl md:text-2xl font-bold text-white drop-shadow-lg">{subject.label}</h2>
-                <p className="text-white/90 text-sm">
-                  {subject.hasCurriculum ? 'Clique sur l’île' : 'Bientôt disponible'}
-                </p>
+            {ISLAND_IMAGES[subject.id] ? (
+              <img
+                src={ISLAND_IMAGES[subject.id]}
+                alt={`Île ${subject.label}`}
+                className="block h-auto w-full select-none object-contain"
+                draggable={false}
+              />
+            ) : (
+              <div className="flex aspect-square w-full flex-col items-center justify-center rounded-[2rem] bg-gradient-to-br from-primary/20 to-accent-purple/20">
+                <span className="mb-2 text-3xl" aria-hidden="true">
+                  {subject.emoji}
+                </span>
+                <span className="text-2xl font-bold text-text-primary">{subject.label}</span>
               </div>
-            </div>
+            )}
           </button>
 
           {/* Indicateurs */}

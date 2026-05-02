@@ -1,23 +1,29 @@
-import { useCallback, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /** Tuiles servies depuis `frontend/public/images/tileset` */
 const TILESET_BASE_PATH = '/images/tileset/'
 
-const COLS = 4
-const CELL_PX = 100
-
-/** Cases de chemin entre deux tuiles « niveau » (après placement du premier niveau) */
-const LEVEL_INTERVAL = 5
-
-/** Lignes ajoutées à chaque passage proche du bas */
-const ROWS_PER_APPEND = 4
-
-const SCROLL_THRESHOLD_PX = 240
+const COLS = 5
+const CENTER_COL = Math.floor(COLS / 2)
+const FIRST_VALID_COL = 1
+const LAST_VALID_COL = COLS - 2
+const LEVEL_INTERVAL = 3
+const RECENTER_ROWS = 4
+const FALLBACK_SEGMENT_ROWS = 8
 
 const LEVEL_SUFFIX = {
   lesson: 'bleu',
   exercise: 'vert',
   boss: 'rouge',
+}
+
+const TILE_BY_OPENINGS = {
+  'down,up': 'chemin_vertical',
+  'left,right': 'chemin_horizontal',
+  'down,right': 'coin_haut_gauche',
+  'down,left': 'coin_haut_droit',
+  'right,up': 'coin_bas_gauche',
+  'left,up': 'coin_bas_droit',
 }
 
 /**
@@ -31,6 +37,7 @@ const LEVEL_SUFFIX = {
  *   levelId?: number,
  *   status?: LevelStatus,
  *   nodeIndex?: number,
+ *   pathIndex?: number,
  * }} MapCell
  */
 
@@ -38,123 +45,149 @@ function tileUrl(type) {
   return `${TILESET_BASE_PATH}${encodeURIComponent(type)}.png`
 }
 
-function plainPathTile(axis) {
-  return axis === 'v' ? 'chemin_vertical' : 'chemin_horizontal'
+function keyOf(row, col) {
+  return `${row}:${col}`
 }
 
-function levelPathTile(axis, node, locked) {
-  if (locked) {
-    return axis === 'v' ? 'chemin_vertical_gris' : 'chemin_horizontal_gris'
+function randomItem(items) {
+  return items[Math.floor(Math.random() * items.length)]
+}
+
+function addStep(path, visited, row, col) {
+  const key = keyOf(row, col)
+  if (visited.has(key)) return false
+  visited.add(key)
+  path.push({ row, col })
+  return true
+}
+
+function buildPath(rowCount) {
+  const path = []
+  const visited = new Set()
+  let row = rowCount - 1
+  let col = CENTER_COL
+  let horizontalRun = 0
+  const recenterRows = Math.min(RECENTER_ROWS, Math.max(1, rowCount - 3))
+
+  addStep(path, visited, row, col)
+  if (row > 0) {
+    row -= 1
+    addStep(path, visited, row, col)
   }
-  const suf = LEVEL_SUFFIX[node?.type] || 'bleu'
-  return axis === 'v' ? `chemin_vertical_${suf}` : `chemin_horizontal_${suf}`
-}
 
-/**
- * Zigzag 4 colonnes (forme en S) :
- * - Ligne paire : entrée col0 (vertical sauf ligne 0), horizontales col1–2, sortie col3 (vertical).
- * - Ligne impaire : entrée col3, horizontales col2–1, sortie col0 (vertical).
- */
-function visitOrderForRow(row) {
-  return row % 2 === 0 ? [0, 1, 2, 3] : [3, 2, 1, 0]
-}
+  while (row > 0) {
+    const inRecenterZone = row <= recenterRows
 
-function axisForCell(row, col) {
-  const even = row % 2 === 0
-  if (even) {
-    if (col === 0 || col === 3) return 'v'
-    return 'h'
-  }
-  if (col === 3 || col === 0) return 'v'
-  return 'h'
-}
-
-function buildCellMapForRow(row, visitOrder, nodes, gen) {
-  /** @type {Map<number, MapCell>} */
-  const byCol = new Map()
-
-  for (const col of visitOrder) {
-    const axis = axisForCell(row, col)
-    gen.pathCellsEmitted += 1
-
-    let isLevel = false
-    let nodeIndex
-    let status = 'default'
-
-    const totalSlots = Math.max(nodes.length * 6, 24)
-    const canPlaceLevel =
-      nodes.length > 0 &&
-      gen.levelPlacedCount < totalSlots &&
-      (gen.pathCellsEmitted === 1 ||
-        (gen.pathCellsEmitted > 1 && (gen.pathCellsEmitted - 1) % LEVEL_INTERVAL === 0))
-
-    if (canPlaceLevel) {
-      isLevel = true
-      nodeIndex = gen.levelPlacedCount % nodes.length
-      if (gen.levelPlacedCount >= nodes.length) {
-        status = 'locked'
+    if (inRecenterZone && col !== CENTER_COL) {
+      const nextCol = col < CENTER_COL ? col + 1 : col - 1
+      if (addStep(path, visited, row, nextCol)) {
+        col = nextCol
+        horizontalRun += 1
+        continue
       }
-      gen.levelPlacedCount += 1
     }
 
-    let type
-    if (isLevel && nodes[nodeIndex]) {
-      type = levelPathTile(axis, nodes[nodeIndex], status === 'locked')
+    if (inRecenterZone || horizontalRun >= 2) {
+      row -= 1
+      addStep(path, visited, row, col)
+      horizontalRun = 0
+      continue
+    }
+
+    const choices = ['up', 'up', 'up']
+    if (col > FIRST_VALID_COL && !visited.has(keyOf(row, col - 1))) choices.push('left')
+    if (col < LAST_VALID_COL && !visited.has(keyOf(row, col + 1))) choices.push('right')
+
+    const move = randomItem(choices)
+    if (move === 'left') {
+      col -= 1
+      horizontalRun += 1
+      addStep(path, visited, row, col)
+    } else if (move === 'right') {
+      col += 1
+      horizontalRun += 1
+      addStep(path, visited, row, col)
     } else {
-      type = plainPathTile(axis)
+      row -= 1
+      horizontalRun = 0
+      addStep(path, visited, row, col)
     }
+  }
 
-    byCol.set(col, {
-      id: `r${row}-c${col}`,
-      row,
-      col,
-      type,
-      isLevel,
-      levelId: isLevel ? gen.levelPlacedCount : undefined,
-      status: isLevel ? status : undefined,
-      nodeIndex: isLevel ? nodeIndex : undefined,
+  return path
+}
+
+function directionBetween(from, to) {
+  if (!from || !to) return null
+  if (to.row === from.row - 1 && to.col === from.col) return 'up'
+  if (to.row === from.row + 1 && to.col === from.col) return 'down'
+  if (to.row === from.row && to.col === from.col - 1) return 'left'
+  if (to.row === from.row && to.col === from.col + 1) return 'right'
+  return null
+}
+
+function openingsForPathIndex(path, pathIndex) {
+  const openings = new Set()
+  const cell = path[pathIndex]
+  const previousDirection = directionBetween(cell, path[pathIndex - 1])
+  const nextDirection = directionBetween(cell, path[pathIndex + 1])
+
+  if (previousDirection) openings.add(previousDirection)
+  if (nextDirection) openings.add(nextDirection)
+  if (pathIndex === 0) openings.add('down')
+  if (pathIndex === path.length - 1) openings.add('up')
+
+  return [...openings].sort().join(',')
+}
+
+function baseTileForCell(path, pathIndex) {
+  const openingKey = openingsForPathIndex(path, pathIndex)
+  return TILE_BY_OPENINGS[openingKey] || 'chemin_vertical'
+}
+
+function levelTile(baseTile, node, locked) {
+  const suffix = locked ? 'gris' : LEVEL_SUFFIX[node?.type] || 'bleu'
+  return `${baseTile}_${suffix}`
+}
+
+function buildFreshMap(nodes, rowCount = FALLBACK_SEGMENT_ROWS) {
+  const path = buildPath(rowCount)
+  const pathIndexByKey = new Map(path.map((cell, index) => [keyOf(cell.row, cell.col), index]))
+  const levelSlots = path.filter((_, index) => index > 0 && index < path.length - 1 && index % LEVEL_INTERVAL === 0)
+  const levelSlotByPathIndex = new Map(levelSlots.map((cell, index) => [pathIndexByKey.get(keyOf(cell.row, cell.col)), index]))
+
+  /** @type {MapCell[][]} */
+  const rows = Array.from({ length: rowCount }, (_, row) =>
+    Array.from({ length: COLS }, (_, col) => {
+      const id = `r${row}-c${col}`
+      const pathIndex = pathIndexByKey.get(keyOf(row, col))
+      if (pathIndex === undefined) {
+        return { id, row, col, type: 'herbe', isLevel: false }
+      }
+
+      const baseTile = baseTileForCell(path, pathIndex)
+      const levelSlot = levelSlotByPathIndex.get(pathIndex)
+      if (levelSlot === undefined || nodes.length === 0) {
+        return { id, row, col, type: baseTile, isLevel: false, pathIndex }
+      }
+
+      const nodeIndex = levelSlot % nodes.length
+      const locked = levelSlot >= nodes.length
+      return {
+        id,
+        row,
+        col,
+        pathIndex,
+        type: levelTile(baseTile, nodes[nodeIndex], locked),
+        isLevel: true,
+        levelId: levelSlot + 1,
+        status: locked ? 'locked' : 'default',
+        nodeIndex,
+      }
     })
-  }
+  )
 
-  return byCol
-}
-
-function createGeneratorState() {
-  return {
-    nextRow: 0,
-    pathCellsEmitted: 0,
-    levelPlacedCount: 0,
-  }
-}
-
-/**
- * @param {number} count
- * @param {Array<{ type: string }>} nodes
- * @param {ReturnType<typeof createGeneratorState>} gen
- * @param {number} startRow
- * @returns {MapCell[][]}
- */
-function generateRows(count, nodes, gen, startRow) {
-  const rows = []
-  for (let i = 0; i < count; i++) {
-    const row = startRow + i
-    const visitOrder = visitOrderForRow(row)
-    const byCol = buildCellMapForRow(row, visitOrder, nodes, gen)
-
-    const line = []
-    for (let c = 0; c < COLS; c++) {
-      line.push(byCol.get(c))
-    }
-    rows.push(line)
-    gen.nextRow = row + 1
-  }
   return rows
-}
-
-function buildFreshMap(nodes, initialRows = 12) {
-  const gen = createGeneratorState()
-  const rows = generateRows(initialRows, nodes, gen, 0)
-  return { rows, gen }
 }
 
 /**
@@ -166,55 +199,91 @@ function buildFreshMap(nodes, initialRows = 12) {
  * }} props
  */
 export default function LevelMap({ nodes = [], onLevelClick }) {
-  const [pack, setPack] = useState(() => buildFreshMap(nodes))
-  const mapRows = pack.rows
-
+  const [mapRows, setMapRows] = useState(() => buildFreshMap(nodes))
   const scrollRef = useRef(null)
-  const appendingRef = useRef(false)
+  const revealPendingRef = useRef(false)
 
-  const appendMoreRows = useCallback(() => {
-    if (appendingRef.current) return
-    appendingRef.current = true
-    setPack((prev) => {
-      const startRow = prev.gen.nextRow
-      const chunk = generateRows(ROWS_PER_APPEND, nodes, prev.gen, startRow)
-      return { ...prev, rows: [...prev.rows, ...chunk] }
-    })
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setMapRows(buildFreshMap(nodes, getVisibleSegmentRows()))
     requestAnimationFrame(() => {
-      appendingRef.current = false
+      el.scrollTop = el.scrollHeight
     })
   }, [nodes])
 
-  const onScroll = useCallback(() => {
+  const getVisibleSegmentRows = () => {
+    const el = scrollRef.current
+    if (!el) return FALLBACK_SEGMENT_ROWS
+    const gridWidth = Math.min(el.clientWidth, 500)
+    const cellSize = gridWidth / COLS
+    return Math.max(6, Math.floor(el.clientHeight / cellSize))
+  }
+
+  const scrollToMapEdge = (edge) => {
     const el = scrollRef.current
     if (!el) return
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD_PX
-    if (nearBottom) appendMoreRows()
-  }, [appendMoreRows])
+    el.scrollTo({
+      top: edge === 'top' ? 0 : el.scrollHeight,
+      behavior: 'smooth',
+    })
+  }
 
-  const flatCells = mapRows.flat()
+  useEffect(() => {
+    if (!revealPendingRef.current) return
+    requestAnimationFrame(() => {
+      scrollToMapEdge('top')
+      revealPendingRef.current = false
+    })
+  }, [mapRows])
+
+  const revealNewPathAbove = () => {
+    revealPendingRef.current = true
+    setMapRows((prev) => [...buildFreshMap(nodes, getVisibleSegmentRows()), ...prev])
+  }
 
   return (
     <div
       ref={scrollRef}
-      onScroll={onScroll}
-      className="w-full max-w-[100vw] overflow-x-hidden overflow-y-auto rounded-xl border border-border bg-[#b8d9a8]"
-      style={{ maxHeight: 'min(72dvh, 72vh, 680px)' }}
+      className="h-full w-full overflow-x-hidden overflow-y-auto bg-[#70ad42] overscroll-y-contain"
+      aria-label="Parcours de niveaux"
     >
       <div
         role="grid"
-        aria-colCount={COLS}
-        aria-rowCount={mapRows.length}
-        className="grid w-full max-w-full grid-cols-4 gap-0 mx-auto sm:max-w-[400px]"
+        aria-colcount={COLS}
+        aria-rowcount={mapRows.length}
+        className="mx-auto grid w-full max-w-[500px] gap-0 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]"
+        style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
       >
-        {flatCells.map((cell) => {
+        {mapRows.map((row, rowIndex) =>
+          row.map((cell, colIndex) => {
+            const cellKey = `${rowIndex}-${colIndex}-${cell.id}`
+            const isStartCell = rowIndex === mapRows.length - 1 && colIndex === CENTER_COL
+            const isEndCell = rowIndex === 0 && colIndex === CENTER_COL
+          const scrollArrow = (isStartCell || isEndCell) && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                if (isEndCell) revealNewPathAbove()
+                else scrollToMapEdge('bottom')
+              }}
+              className="absolute inset-0 z-20 hidden items-center justify-center text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)] transition-transform hover:scale-110 lg:flex"
+              aria-label={isStartCell ? 'Descendre dans le parcours' : 'Monter dans le parcours'}
+            >
+              <span className="material-symbols-outlined rounded-full bg-black/20 text-[48px] backdrop-blur-sm">
+                {isStartCell ? 'keyboard_arrow_down' : 'keyboard_arrow_up'}
+              </span>
+            </button>
+          )
+
           const img = (
             <img
               src={tileUrl(cell.type)}
               alt=""
-              width={CELL_PX}
-              height={CELL_PX}
-              className="block aspect-square w-full max-h-[100px] select-none object-cover"
+              width="100"
+              height="100"
+              className="block aspect-square w-full select-none object-cover"
               draggable={false}
               loading="lazy"
             />
@@ -222,8 +291,9 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
 
           if (!cell.isLevel) {
             return (
-              <div key={cell.id} className="relative overflow-hidden" role="presentation">
+              <div key={cellKey} className="relative overflow-hidden" role="presentation">
                 {img}
+                {scrollArrow}
               </div>
             )
           }
@@ -232,22 +302,24 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
           const node = nodes[cell.nodeIndex]
 
           return (
-            <button
-              key={cell.id}
-              type="button"
-              disabled={locked || !node}
-              onClick={() => {
-                if (!locked && node) onLevelClick?.(node, cell)
-              }}
-              className={`relative overflow-hidden p-0 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                locked ? 'cursor-not-allowed opacity-55' : 'cursor-pointer hover:z-10 hover:scale-[1.03] active:scale-95'
-              }`}
-              aria-label={locked ? 'Niveau verrouillé' : `${node?.title ?? 'Niveau'} — ouvrir`}
-            >
-              {img}
-            </button>
+            <div key={cellKey} className="relative overflow-hidden">
+              <button
+                type="button"
+                disabled={locked || !node}
+                onClick={() => {
+                  if (!locked && node) onLevelClick?.(node, cell)
+                }}
+                className={`relative block w-full p-0 transition-transform focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                  locked ? 'cursor-not-allowed' : 'cursor-pointer hover:z-10 hover:scale-[1.03] active:scale-95'
+                }`}
+                aria-label={locked ? 'Niveau verrouillé' : `${node?.title ?? 'Niveau'} - ouvrir`}
+              >
+                {img}
+              </button>
+              {scrollArrow}
+            </div>
           )
-        })}
+        }))}
       </div>
     </div>
   )
