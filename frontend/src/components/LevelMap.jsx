@@ -10,6 +10,7 @@ const LAST_VALID_COL = COLS - 2
 const LEVEL_INTERVAL = 3
 const RECENTER_ROWS = 4
 const FALLBACK_SEGMENT_ROWS = 8
+const TOP_REVEAL_THRESHOLD_PX = 140
 
 const LEVEL_SUFFIX = {
   lesson: 'bleu',
@@ -202,6 +203,7 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
   const [mapRows, setMapRows] = useState(() => buildFreshMap(nodes))
   const scrollRef = useRef(null)
   const revealPendingRef = useRef(false)
+  const scrollRevealRef = useRef(null)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -242,9 +244,39 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
     setMapRows((prev) => [...buildFreshMap(nodes, getVisibleSegmentRows()), ...prev])
   }
 
+  const prependPathAbove = () => {
+    const el = scrollRef.current
+    if (!el || scrollRevealRef.current) return
+    scrollRevealRef.current = {
+      previousHeight: el.scrollHeight,
+      rows: getVisibleSegmentRows(),
+    }
+    setMapRows((prev) => [...buildFreshMap(nodes, scrollRevealRef.current.rows), ...prev])
+  }
+
+  useEffect(() => {
+    const pending = scrollRevealRef.current
+    const el = scrollRef.current
+    if (!pending || !el) return
+    requestAnimationFrame(() => {
+      const addedHeight = el.scrollHeight - pending.previousHeight
+      el.scrollTop += addedHeight
+      scrollRevealRef.current = null
+    })
+  }, [mapRows])
+
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el || revealPendingRef.current) return
+    if (el.scrollTop < TOP_REVEAL_THRESHOLD_PX) {
+      prependPathAbove()
+    }
+  }
+
   return (
     <div
       ref={scrollRef}
+      onScroll={handleScroll}
       className="h-full w-full overflow-x-hidden overflow-y-auto bg-[#70ad42] overscroll-y-contain"
       aria-label="Parcours de niveaux"
     >
