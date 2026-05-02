@@ -10,6 +10,8 @@ const LAST_VALID_COL = COLS - 2
 const LEVEL_INTERVAL = 3
 const RECENTER_ROWS = 4
 const FALLBACK_SEGMENT_ROWS = 8
+const INITIAL_SEGMENT_PAGES = 3
+const PREPEND_SEGMENT_PAGES = 2
 const TOP_REVEAL_THRESHOLD_PX = 140
 
 const LEVEL_SUFFIX = {
@@ -208,18 +210,18 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-    setMapRows(buildFreshMap(nodes, getVisibleSegmentRows()))
+    setMapRows(buildFreshMap(nodes, getVisibleSegmentRows(INITIAL_SEGMENT_PAGES)))
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight
     })
   }, [nodes])
 
-  const getVisibleSegmentRows = () => {
+  const getVisibleSegmentRows = (pages = 1) => {
     const el = scrollRef.current
-    if (!el) return FALLBACK_SEGMENT_ROWS
+    if (!el) return FALLBACK_SEGMENT_ROWS * pages
     const gridWidth = Math.min(el.clientWidth, 500)
     const cellSize = gridWidth / COLS
-    return Math.max(6, Math.floor(el.clientHeight / cellSize))
+    return Math.max(6, Math.ceil(el.clientHeight / cellSize) * pages)
   }
 
   const scrollToMapEdge = (edge) => {
@@ -241,7 +243,7 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
 
   const revealNewPathAbove = () => {
     revealPendingRef.current = true
-    setMapRows((prev) => [...buildFreshMap(nodes, getVisibleSegmentRows()), ...prev])
+    setMapRows((prev) => [...buildFreshMap(nodes, getVisibleSegmentRows(PREPEND_SEGMENT_PAGES)), ...prev])
   }
 
   const prependPathAbove = () => {
@@ -249,7 +251,7 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
     if (!el || scrollRevealRef.current) return
     scrollRevealRef.current = {
       previousHeight: el.scrollHeight,
-      rows: getVisibleSegmentRows(),
+      rows: getVisibleSegmentRows(PREPEND_SEGMENT_PAGES),
     }
     setMapRows((prev) => [...buildFreshMap(nodes, scrollRevealRef.current.rows), ...prev])
   }
@@ -277,8 +279,9 @@ export default function LevelMap({ nodes = [], onLevelClick }) {
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="h-full w-full overflow-x-hidden overflow-y-auto bg-[#70ad42] overscroll-y-contain"
+      className="h-full w-full touch-pan-y overflow-x-hidden overflow-y-auto bg-[#70ad42] overscroll-y-contain"
       aria-label="Parcours de niveaux"
+      style={{ WebkitOverflowScrolling: 'touch' }}
     >
       <div
         role="grid"

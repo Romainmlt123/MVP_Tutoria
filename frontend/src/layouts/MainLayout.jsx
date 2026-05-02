@@ -41,7 +41,7 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="flex min-h-dvh min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-primary/[0.06] pt-[env(safe-area-inset-top,0px)]">
+    <div className="flex h-dvh min-h-dvh w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary/[0.06] pt-[env(safe-area-inset-top,0px)]">
       <Sidebar />
       <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
         {emailNotConfirmed && !bannerDismissed && (
