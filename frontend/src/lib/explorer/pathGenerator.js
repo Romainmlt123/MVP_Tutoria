@@ -9,6 +9,7 @@
  *   levelIndex?: number,
  *   nodeIndex?: number,
  *   status?: 'locked' | 'unlocked' | 'completed',
+ *   worldCol?: number,
  * }} MapCell */
 
 export const MODULE_WIDTH = 16
@@ -258,6 +259,7 @@ export function sliceGridForPage(fullGrid, startCol, pageCols) {
   return fullGrid.map((row) =>
     row.slice(startCol, startCol + pageCols).map((cell, localCol) => ({
       ...cell,
+      worldCol: cell.col,
       id: `r${cell.row}-c${localCol}`,
       col: localCol,
     }))

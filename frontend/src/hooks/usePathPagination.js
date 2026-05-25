@@ -6,9 +6,10 @@ import {
   pathToGrid,
   sliceGridForPage,
 } from '../lib/explorer/pathGenerator'
+import { findProgressPageIndex } from '../lib/explorer/decorations'
 import { computeViewportGridMetrics } from '../lib/explorer/viewportGrid'
 const INITIAL_MODULE_SEEDS = [1, 2, 3]
-const WHEEL_DEBOUNCE_MS = 380
+const WHEEL_DEBOUNCE_MS = 950
 const EDGE_PAGE_THRESHOLD = 1
 
 /**
@@ -28,6 +29,8 @@ export function usePathPagination(options = {}) {
   )
   const wheelLockRef = useRef(false)
   const touchStartXRef = useRef(0)
+  const scrollLockedRef = useRef(false)
+  const [pendingPage, setPendingPage] = useState(null)
 
   const measure = useCallback(() => {
     const el = containerRef.current
@@ -80,6 +83,23 @@ export function usePathPagination(options = {}) {
     return sliceGridForPage(fullGrid, startCol, metrics.pageCols)
   }, [fullGrid, pageIndex, metrics.pageCols])
 
+  const progressPageIndex = useMemo(
+    () => findProgressPageIndex(fullGrid, metrics.pageCols),
+    [fullGrid, metrics.pageCols]
+  )
+
+  const getPageGrid = useCallback(
+    (index) => {
+      const startCol = index * metrics.pageCols
+      return sliceGridForPage(fullGrid, startCol, metrics.pageCols)
+    },
+    [fullGrid, metrics.pageCols]
+  )
+
+  const setScrollLocked = useCallback((locked) => {
+    scrollLockedRef.current = locked
+  }, [])
+
   const pagesPerModule = Math.max(1, Math.ceil(MODULE_WIDTH / metrics.pageCols))
 
   const appendModule = useCallback(() => {
@@ -107,6 +127,7 @@ export function usePathPagination(options = {}) {
   )
 
   const goNextPage = useCallback(() => {
+    if (scrollLockedRef.current) return
     setPageIndex((p) => {
       const next = Math.min(maxPageIndex, p + 1)
       if (next >= maxPageIndex - EDGE_PAGE_THRESHOLD) appendModule()
@@ -115,6 +136,7 @@ export function usePathPagination(options = {}) {
   }, [maxPageIndex, appendModule])
 
   const goPrevPage = useCallback(() => {
+    if (scrollLockedRef.current) return
     setPageIndex((p) => {
       const next = Math.max(0, p - 1)
       if (next <= EDGE_PAGE_THRESHOLD) prependModule()
@@ -122,11 +144,29 @@ export function usePathPagination(options = {}) {
     })
   }, [prependModule])
 
+  const jumpToPage = useCallback((targetPage) => {
+    if (scrollLockedRef.current) return
+    setPendingPage(Math.max(0, targetPage))
+  }, [])
+
+  useEffect(() => {
+    if (pendingPage === null) return
+
+    if (pendingPage <= maxPageIndex) {
+      setPageIndex(pendingPage)
+      setPendingPage(null)
+      return
+    }
+
+    appendModule()
+  }, [pendingPage, maxPageIndex, appendModule])
+
   useEffect(() => {
     const el = containerRef.current
     if (!el) return undefined
 
     const onWheel = (event) => {
+      if (scrollLockedRef.current) return
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
       event.preventDefault()
       if (wheelLockRef.current) return
@@ -148,6 +188,7 @@ export function usePathPagination(options = {}) {
 
   const handleTouchEnd = useCallback(
     (e) => {
+      if (scrollLockedRef.current) return
       const dx = e.changedTouches[0].clientX - touchStartXRef.current
       if (dx < -50) goNextPage()
       else if (dx > 50) goPrevPage()
@@ -166,10 +207,14 @@ export function usePathPagination(options = {}) {
     pageGrid,
     metrics,
     maxPageIndex,
+    progressPageIndex,
     totalCols,
+    getPageGrid,
+    setScrollLocked,
     goNextPage,
     goPrevPage,
     goToPage,
+    jumpToPage,
     handleTouchStart,
     handleTouchEnd,
     resetToStart,
