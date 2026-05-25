@@ -1,0 +1,19 @@
+{
+  "name": "Tutor'IA",
+  "short_name": "Tutor'IA",
+  "description": "Assistant pédagogique — révisions, chat et parcours gamifié",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6C5CE7",
+  "orientation": "portrait",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

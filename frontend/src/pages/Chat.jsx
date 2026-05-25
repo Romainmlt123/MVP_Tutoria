@@ -1,8 +1,7 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import ChatHistory from '../components/ChatHistory'
-import ChatMessage from '../components/ChatMessage'
-import ChatInput from '../components/ChatInput'
+import ChatPanelCore from '../components/explorer/ChatPanelCore'
 import useChatStore from '../store/chatStore'
 import useAuthStore from '../store/authStore'
 
@@ -65,13 +64,6 @@ export default function Chat() {
     },
     [loadConversation]
   )
-
-  const scrollRef = useRef(null)
-  useEffect(() => {
-    if (isLoading && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, isLoading])
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-gradient-to-b from-slate-50 via-white to-primary/[0.04] font-display text-text-primary antialiased overflow-hidden relative">
@@ -145,39 +137,14 @@ export default function Chat() {
           </div>
         </header>
 
-        {/* Zone de chat */}
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 scroll-smooth z-10 min-w-0 bg-transparent overscroll-y-contain">
-          <div className="max-w-3xl mx-auto flex flex-col gap-6 sm:gap-8 pb-40 sm:pb-44 lg:pb-36">
-            {error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px]">error</span>
-                {error}
-              </div>
-            )}
-            {messages.length > 0 && (
-              <div className="flex justify-center">
-                <span className="text-xs font-medium text-text-muted bg-surface px-3 py-1 rounded-full border border-border shadow-sm">
-                  {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </span>
-              </div>
-            )}
-            {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
-            ))}
-            {isLoading && (messages.length === 0 || messages[messages.length - 1].role === 'user') && (
-              <div className="flex items-center gap-2 text-text-secondary text-sm">
-                <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
-                Tutor&apos;IA réfléchit...
-              </div>
-            )}
-          </div>
-        </div>
-
-        <ChatInput
+        <ChatPanelCore
+          messages={messages}
+          isLoading={isLoading}
+          error={error}
           onSend={handleSend}
-          disabled={isLoading}
           initialMessage={initialMessage}
           onInitialMessageConsumed={() => setInitialMessage(null)}
+          className="z-10 min-w-0 flex-1 pb-0"
         />
       </main>
     </div>

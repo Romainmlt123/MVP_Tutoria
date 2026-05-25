@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --host 0.0.0.0",
     "build": "vite build",
     "lint": "eslint .",
+    "test:explorer": "node src/lib/explorer/pathGenerator.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

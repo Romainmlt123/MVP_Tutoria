@@ -45,8 +45,11 @@ export function buildUserContextForPrompt(profile) {
 
   const firstName = (onboarding.firstName || '').trim()
   const lastName = (onboarding.lastName || '').trim()
+  if (firstName) {
+    parts.push(`Prénom de l'élève : ${firstName}. Tutoi-le et utilise son prénom naturellement.`)
+  }
   const fullName = [firstName, lastName].filter(Boolean).join(' ')
-  if (fullName) parts.push(`Prénom / nom : ${fullName}.`)
+  if (fullName && !firstName) parts.push(`Prénom / nom : ${fullName}.`)
 
   const grade = onboarding.grade
   if (grade) {

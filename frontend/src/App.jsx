@@ -13,6 +13,7 @@ import Settings from './pages/Settings'
 import Voice from './pages/Voice'
 import Explorer from './pages/Explorer'
 import ExplorerPath from './pages/ExplorerPath'
+import ExplorerLevelDiscuss from './pages/ExplorerLevelDiscuss'
 import { getDefaultChapterId } from './data/curriculum'
 import useProfileStore from './store/profileStore'
 import Login from './pages/Login'
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="/explorer" element={<Explorer />} />
         <Route path="/explorer/:subjectId" element={<ExplorerSubjectRedirect />} />
         <Route path="/explorer/:subjectId/chapter/:chapterId" element={<ExplorerPath />} />
+        <Route path="/explorer/:subjectId/chapter/:chapterId/level/:levelIndex" element={<ExplorerLevelDiscuss />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
