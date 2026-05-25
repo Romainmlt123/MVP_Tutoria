@@ -37,12 +37,25 @@ export default function LevelMap({
   const width = gridWidth ?? colCount * cellSize
   const height = gridHeight ?? rowCount * cellSize
 
+  const grassTileUrl = tileUrl('herbe')
+
   return (
     <div
       className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#70ad42]"
       role="region"
       aria-label="Parcours de niveaux"
     >
+      {/* Herbe répétée sur toute la zone (comble les bandes latérales) */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{
+          backgroundImage: `url(${grassTileUrl})`,
+          backgroundSize: `${cellSize}px ${cellSize}px`,
+          backgroundRepeat: 'repeat',
+          imageRendering: 'pixelated',
+        }}
+      />
       {showNavHints && (
         <>
           <button
@@ -68,7 +81,7 @@ export default function LevelMap({
         role="grid"
         aria-rowcount={rowCount}
         aria-colcount={colCount}
-        className="grid shrink-0"
+        className="relative z-10 grid shrink-0"
         style={{
           gridTemplateColumns: `repeat(${colCount}, ${cellSize}px)`,
           gridTemplateRows: `repeat(${rowCount}, ${cellSize}px)`,
