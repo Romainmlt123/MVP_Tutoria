@@ -86,7 +86,8 @@ export default function Home() {
       : quickAccessSubjects
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-12">
+    <div className="page-scroll">
+      <div className="container mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-12">
       {/* En-tête */}
       <header className="mb-6 sm:mb-10">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-text-primary mb-3 leading-tight">
@@ -257,6 +258,7 @@ export default function Home() {
             </div>
           </Link>
         </div>
+      </div>
       </div>
     </div>
   )

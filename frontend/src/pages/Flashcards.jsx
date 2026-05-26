@@ -105,10 +105,10 @@ export default function Flashcards() {
   ]
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <header className="flex-none px-6 py-6 md:px-10 md:pt-10">
+    <div className="page-shell">
+      <header className="shrink-0 px-4 py-4 sm:px-6 sm:py-6 md:px-10 md:pt-10">
         <div className="flex flex-col gap-6">
-          <nav className="flex items-center gap-2 text-sm font-medium text-text-muted" aria-label="Fil d'Ariane">
+          <nav className="flex min-w-0 flex-wrap items-center gap-1 text-sm font-medium text-text-muted sm:gap-2" aria-label="Fil d'Ariane">
             <Link to="/" className="hover:text-primary transition-colors">Accueil</Link>
             <span className="material-symbols-outlined text-[16px]" aria-hidden="true">chevron_right</span>
             <span className="text-text-primary" aria-current="page">Bibliothèque de Flashcards</span>
@@ -151,7 +151,7 @@ export default function Flashcards() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-10">
+      <div className="page-scroll px-4 pb-8 sm:px-6 md:px-10 md:pb-10">
         {flashcardError && (
           <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-700 text-sm flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">

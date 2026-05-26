@@ -110,7 +110,7 @@ export default function FlashcardReview() {
   if (cards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <div className="rounded-2xl border border-border bg-surface p-8 max-w-md text-center">
+        <div className="mx-4 max-w-md rounded-2xl border border-border bg-surface p-6 text-center sm:p-8">
           <span className="material-symbols-outlined text-4xl text-text-muted mb-4 block">style</span>
           <h2 className="text-xl font-bold text-text-primary mb-2">Aucune carte à réviser</h2>
           <p className="text-text-secondary mb-6">Ajoute des cartes dans tes dossiers pour lancer une révision.</p>
@@ -128,7 +128,7 @@ export default function FlashcardReview() {
     const pct = total > 0 ? Math.round((correct / total) * 100) : 0
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 bg-gradient-to-b from-background via-background to-primary/[0.03]">
-        <div className="rounded-3xl border border-border bg-surface shadow-xl shadow-primary/5 p-8 max-w-md w-full text-center ring-1 ring-black/5">
+        <div className="mx-4 w-full max-w-md rounded-3xl border border-border bg-surface p-6 text-center shadow-xl shadow-primary/5 ring-1 ring-black/5 sm:p-8">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-accent-purple/20 flex items-center justify-center mx-auto mb-6">
             <span className="material-symbols-outlined text-primary text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
           </div>
@@ -177,7 +177,7 @@ export default function FlashcardReview() {
           role="region"
           aria-label="Carte de révision"
         >
-          <div className="flex-1 p-8 md:p-10 flex flex-col justify-center">
+          <div className="flex flex-1 flex-col justify-center p-4 sm:p-8 md:p-10">
             {isQcm ? (
               <>
                 {!showExplanation ? (

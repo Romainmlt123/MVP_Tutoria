@@ -89,14 +89,14 @@ export default function Analytics() {
   ]
 
   return (
-    <div className="h-full overflow-y-auto">
-      <header className="p-8 pb-0">
-        <div className="flex flex-wrap justify-between items-end gap-4 mb-8">
+    <div className="page-scroll w-full max-w-full">
+      <header className="page-padding pb-0">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="flex flex-col gap-1">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-text-primary">Bon retour, {displayName}</h2>
             <p className="text-text-secondary text-base">Voici ta progression ce mois-ci.</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface border border-border text-sm text-text-primary hover:border-primary/30 transition shadow-sm" aria-label="Sélectionner la période">
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">calendar_today</span>
               <span>Fév. 2026</span>
@@ -115,7 +115,7 @@ export default function Analytics() {
         </div>
       </header>
 
-      <div className="px-8 pb-8 flex flex-col xl:flex-row gap-6">
+      <div className="flex flex-col gap-6 px-4 pb-6 sm:px-6 sm:pb-8 lg:px-8 xl:flex-row">
         <div className="flex flex-col gap-6 flex-1">
           {/* Activité 7 jours (révisions flashcards) */}
           <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm">
@@ -131,7 +131,7 @@ export default function Analytics() {
               <svg
                 className="w-full h-full"
                 viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-                preserveAspectRatio="none"
+                preserveAspectRatio="xMidYMid meet"
                 fill="none"
                 role="img"
                 aria-label="Révisions flashcards par jour"
@@ -216,7 +216,7 @@ export default function Analytics() {
         </div>
 
         {/* Colonne droite */}
-        <div className="flex flex-col gap-6 xl:w-[360px] shrink-0">
+        <div className="flex w-full min-w-0 shrink-0 flex-col gap-6 xl:w-[min(100%,360px)]">
           <RadarChart subjects={radarSubjects} />
           <div className="bg-gradient-to-br from-primary to-accent-purple rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 opacity-20" aria-hidden="true">

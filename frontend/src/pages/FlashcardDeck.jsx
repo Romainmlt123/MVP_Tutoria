@@ -117,7 +117,7 @@ export default function FlashcardDeck() {
 
   if (!deck && decks.length > 0 && !decks.find((d) => d.id === deckId)) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 text-center sm:p-8">
         <p className="text-text-secondary mb-4">Dossier introuvable.</p>
         <Link to="/flashcards" className="text-primary font-medium hover:underline">Retour à la bibliothèque</Link>
       </div>
@@ -127,23 +127,23 @@ export default function FlashcardDeck() {
   const c = deck ? gradientCardColors[deck.color] || gradientCardColors.blue : gradientCardColors.blue
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <header className="flex-none px-6 py-6 md:px-10 md:pt-10 border-b border-border bg-surface/50">
-        <nav className="flex items-center gap-2 text-sm font-medium text-text-muted mb-4" aria-label="Fil d'Ariane">
+    <div className="page-shell">
+      <header className="shrink-0 border-b border-border bg-surface/50 px-4 py-4 sm:px-6 sm:py-6 md:px-10 md:pt-10">
+        <nav className="mb-3 flex min-w-0 flex-wrap items-center gap-1 text-sm font-medium text-text-muted sm:mb-4 sm:gap-2" aria-label="Fil d'Ariane">
           <Link to="/" className="hover:text-primary transition-colors">Accueil</Link>
           <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           <Link to="/flashcards" className="hover:text-primary transition-colors">Flashcards</Link>
           <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-          <span className="text-text-primary" aria-current="page">{deck?.name ?? '…'}</span>
+          <span className="truncate text-text-primary" aria-current="page">{deck?.name ?? '…'}</span>
         </nav>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <div className={`h-14 w-14 rounded-xl flex items-center justify-center text-white ${deck ? c.bg : 'bg-slate-200'}`}>
               <span className="material-symbols-outlined text-[28px]">{deck?.icon ?? 'style'}</span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-text-primary">{deck?.name ?? '…'}</h1>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="truncate text-xl font-bold text-text-primary sm:text-2xl md:text-3xl">{deck?.name ?? '…'}</h1>
                 {isGlobalDeck && (
                   <span className="rounded-full bg-primary/15 text-primary px-2.5 py-0.5 text-xs font-medium">Global</span>
                 )}
@@ -151,7 +151,7 @@ export default function FlashcardDeck() {
               <p className="text-text-secondary text-sm">{deckCards?.length ?? 0} carte(s)</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {!isGlobalDeck && (
               <div className="relative">
                 <button
@@ -198,7 +198,7 @@ export default function FlashcardDeck() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-6 md:px-10 py-6">
+      <div className="page-scroll px-4 py-4 sm:px-6 md:px-10 md:py-6">
         {cardsLoading ? (
           <div className="flex items-center justify-center py-20">
             <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>

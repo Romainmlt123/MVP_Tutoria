@@ -41,9 +41,9 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="flex h-dvh min-h-dvh w-full overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary/[0.06] pt-[env(safe-area-inset-top,0px)]">
+    <div className="flex h-dvh min-h-dvh w-full max-w-[100vw] overflow-hidden bg-gradient-to-br from-slate-50 via-white to-primary/[0.06] pt-[env(safe-area-inset-top,0px)]">
       <Sidebar />
-      <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative pb-[calc(5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
+      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-[calc(var(--app-bottom-nav-height,4.25rem)+env(safe-area-inset-bottom,0px))] md:pb-0">
         {emailNotConfirmed && !bannerDismissed && (
           <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 px-4 py-3 bg-amber-50 border-b border-amber-200 text-amber-900 text-sm">
             <div className="flex items-start sm:items-center gap-2 min-w-0">

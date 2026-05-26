@@ -29,6 +29,19 @@ export function getGrassDecoration(seed, row, worldCol) {
   }
 }
 
+/** Colonne du point débloqué le plus à droite. */
+export function findProgressCol(fullGrid) {
+  let maxCol = -1
+  for (const row of fullGrid) {
+    for (const cell of row) {
+      if (cell.isLevel && cell.status !== 'locked' && cell.col > maxCol) {
+        maxCol = cell.col
+      }
+    }
+  }
+  return Math.max(0, maxCol)
+}
+
 /** Page contenant le point débloqué le plus à droite. */
 export function findProgressPageIndex(fullGrid, pageCols) {
   let maxCol = -1

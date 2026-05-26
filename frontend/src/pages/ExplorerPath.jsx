@@ -4,6 +4,7 @@ import { getChapter } from '../data/curriculum'
 import useProfileStore from '../store/profileStore'
 import useAuthStore from '../store/authStore'
 import AnimatedPathPages from '../components/explorer/AnimatedPathPages'
+import ScrollablePathStrip from '../components/explorer/ScrollablePathStrip'
 import { usePathPagination } from '../hooks/usePathPagination'
 import {
   getLevelStatus,
@@ -46,17 +47,24 @@ export default function ExplorerPath() {
 
   const {
     containerRef,
+    stripScrollRef,
     pageIndex,
+    fullGrid,
     metrics,
-    progressPageIndex,
+    isStripMode,
+    isAwayFromProgress,
+    scrollTarget,
     getPageGrid,
     setScrollLocked,
     goNextPage,
     goPrevPage,
-    jumpToPage,
+    jumpToProgress,
+    handleStripScroll,
     handleTouchStart,
     handleTouchEnd,
     setPageIndex,
+    setScrollTarget,
+    progressCol,
   } = usePathPagination({
     nodes: chapter?.nodes ?? [],
     getLevelStatus: getLevelStatusForGrid,
@@ -65,11 +73,29 @@ export default function ExplorerPath() {
 
   useEffect(() => {
     const returnPage = location.state?.returnPageIndex
-    if (typeof returnPage === 'number' && returnPage >= 0) {
-      setPageIndex(returnPage)
-      window.history.replaceState({}, '', location.pathname)
+    if (typeof returnPage !== 'number' || returnPage < 0) return
+
+    setPageIndex(returnPage)
+
+    if (isStripMode) {
+      const col = returnPage * metrics.pageCols
+      setScrollTarget({ col, behavior: 'auto', key: Date.now() })
     }
-  }, [location.state?.returnPageIndex, location.pathname, setPageIndex])
+
+    window.history.replaceState({}, '', location.pathname)
+  }, [
+    location.state?.returnPageIndex,
+    location.pathname,
+    setPageIndex,
+    isStripMode,
+    metrics.pageCols,
+    setScrollTarget,
+  ])
+
+  useEffect(() => {
+    if (!isStripMode || location.state?.returnPageIndex != null) return
+    setScrollTarget({ col: progressCol, behavior: 'auto', key: Date.now() })
+  }, [isStripMode, progressCol, location.state?.returnPageIndex, setScrollTarget])
 
   const handleLevelClick = useCallback(
     ({ node, cell }) => {
@@ -97,7 +123,16 @@ export default function ExplorerPath() {
   }
 
   const displayPage = pageIndex + 1
-  const isAwayFromProgress = pageIndex !== progressPageIndex
+  const scrollHint = isStripMode ? 'glisse horizontalement' : 'swipe ou molette'
+
+  const mapProps = {
+    cellSize: metrics.cellSize,
+    gridWidth: metrics.gridWidth,
+    gridHeight: metrics.gridHeight,
+    decorationSeed: chapterSeed,
+    nodes: chapter.nodes,
+    onLevelClick: handleLevelClick,
+  }
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#70ad42] font-display text-text-primary">
@@ -116,7 +151,7 @@ export default function ExplorerPath() {
           <div className="rounded-2xl bg-white/90 px-4 py-2 text-right shadow-md backdrop-blur">
             <h1 className="truncate text-sm font-bold text-text-primary sm:text-base">{chapter.name}</h1>
             <p className="text-[11px] font-medium text-text-secondary sm:text-xs">
-              Page {displayPage} · swipe ou molette
+              {isStripMode ? 'Parcours continu' : `Page ${displayPage}`} · {scrollHint}
             </p>
           </div>
           <div
@@ -142,23 +177,29 @@ export default function ExplorerPath() {
       <div
         ref={containerRef}
         className="relative min-h-0 flex-1 overflow-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={isStripMode ? undefined : handleTouchStart}
+        onTouchEnd={isStripMode ? undefined : handleTouchEnd}
       >
-        <AnimatedPathPages
-          pageIndex={pageIndex}
-          getPageGrid={getPageGrid}
-          pageCols={metrics.pageCols}
-          setScrollLocked={setScrollLocked}
-          cellSize={metrics.cellSize}
-          gridWidth={metrics.gridWidth}
-          gridHeight={metrics.gridHeight}
-          decorationSeed={chapterSeed}
-          nodes={chapter.nodes}
-          onLevelClick={handleLevelClick}
-          onPrevPage={goPrevPage}
-          onNextPage={goNextPage}
-        />
+        {isStripMode ? (
+          <ScrollablePathStrip
+            scrollRef={stripScrollRef}
+            fullGrid={fullGrid}
+            metrics={metrics}
+            scrollTarget={scrollTarget}
+            onScroll={handleStripScroll}
+            {...mapProps}
+          />
+        ) : (
+          <AnimatedPathPages
+            pageIndex={pageIndex}
+            getPageGrid={getPageGrid}
+            pageCols={metrics.pageCols}
+            setScrollLocked={setScrollLocked}
+            onPrevPage={goPrevPage}
+            onNextPage={goNextPage}
+            {...mapProps}
+          />
+        )}
 
         {isAwayFromProgress && (
           <div className="pointer-events-none absolute inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom,0px))] z-30 flex justify-center px-4">
@@ -173,7 +214,7 @@ export default function ExplorerPath() {
               />
               <button
                 type="button"
-                onClick={() => jumpToPage(progressPageIndex)}
+                onClick={jumpToProgress}
                 className="relative inline-flex min-h-12 items-center gap-2.5 rounded-full border-2 border-white/60 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 px-6 py-3 text-sm font-extrabold tracking-wide text-white shadow-[0_10px_40px_rgba(220,38,38,0.65)] transition-all duration-200 hover:scale-[1.04] hover:from-red-500 hover:via-red-400 hover:to-orange-400 hover:shadow-[0_14px_48px_rgba(239,68,68,0.85)] active:scale-[0.97]"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/25 shadow-inner">

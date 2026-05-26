@@ -114,6 +114,7 @@ flowchart LR
 │   │   └── lib/                 # clients externes (supabase)
 │   ├── package.json
 │   └── vercel.json
+├── mobile/                      # Conteneur Expo (WebView plein écran, Expo Go)
 ├── docs/                        # Guides de setup/deploy/diagnostic
 ├── supabase/migrations/         # Schéma base de données
 ├── Programmes/                  # Références programmes officiels
@@ -196,6 +197,22 @@ Notes :
 - si `VITE_API_URL` est absent, fallback vers `http://localhost:8000`,
 - si Supabase n’est pas configuré, certaines fonctions (auth/persistence) sont désactivées.
 
+### Tester sur téléphone (Expo Go, sans barre d’adresse)
+
+Le frontend reste une app **web** ; `mobile/` l’affiche en plein écran via Expo :
+
+```bash
+cd mobile && npm install && npm start
+```
+
+`npm start` démarre **Vite** + **Expo (LAN)** et charge la WebView sur `http://IP_DU_PC:PORT` (port détecté, souvent 5173) — hot reload. Tunnel optionnel : `npm run start:tunnel`.
+
+Version en ligne (Vercel) : `npm run start:prod` dans `mobile/`.
+
+**Sans Expo** : Chrome sur le téléphone → `https://mvp-tutoria.vercel.app` → **Ajouter à l’écran d’accueil**.
+
+Guide : [docs/MOBILE_EXPO.md](docs/MOBILE_EXPO.md)
+
 ---
 
 ## Déploiement
@@ -269,6 +286,7 @@ Un push sur la branche connectée déclenche le redeploy.
 - [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md)
 - [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)
 - [docs/VOICE_DIAGNOSTIC.md](docs/VOICE_DIAGNOSTIC.md)
+- [docs/MOBILE_EXPO.md](docs/MOBILE_EXPO.md)
 - [PATCHLOG.md](PATCHLOG.md)
 
 ---

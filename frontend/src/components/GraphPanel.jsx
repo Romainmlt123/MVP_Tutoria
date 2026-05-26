@@ -806,7 +806,7 @@ const GraphPanel = ({ graphData: graphDataProp, inline = false, fullScreen = fal
       ? 'w-full h-full flex flex-col bg-surface shadow-inner overflow-hidden'
       : fill
         ? 'w-full min-w-0 flex-1 flex flex-col overflow-hidden rounded-lg'
-        : 'w-[500px] bg-surface border-l border-border flex flex-col flex-shrink-0 shadow-lg'
+        : 'w-full max-w-full lg:w-[min(100%,28rem)] bg-surface border-l border-border flex flex-col flex-shrink-0 shadow-lg'
 
   return (
     <div className={wrapperClass}>

@@ -69,14 +69,14 @@ export default function Chat() {
     <div className="flex h-full min-h-0 w-full flex-col bg-gradient-to-b from-slate-50 via-white to-primary/[0.04] font-display text-text-primary antialiased overflow-hidden relative">
       {/* Overlay + tiroir : uniquement sur mobile (sur desktop l'historique est dans la sidebar) */}
       <div
-        className={`fixed left-0 right-0 top-0 z-20 bg-black/30 transition-opacity duration-300 lg:hidden bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] ${
+        className={`fixed left-0 right-0 top-0 z-20 bg-black/30 transition-opacity duration-300 md:hidden bottom-[calc(var(--app-bottom-nav-height,4.25rem)+env(safe-area-inset-bottom,0px))] ${
           historyOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         aria-hidden="true"
         onClick={() => setHistoryOpen(false)}
       />
       <div
-        className={`fixed left-0 top-0 z-30 w-full max-w-[min(100%,320px)] transform transition-transform duration-300 ease-out lg:hidden bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] ${
+        className={`fixed left-0 top-0 z-30 w-full max-w-[min(100%,320px)] transform transition-transform duration-300 ease-out md:hidden bottom-[calc(var(--app-bottom-nav-height,4.25rem)+env(safe-area-inset-bottom,0px))] ${
           historyOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-modal="true"

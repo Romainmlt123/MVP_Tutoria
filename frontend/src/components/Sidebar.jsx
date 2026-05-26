@@ -59,7 +59,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="hidden lg:flex w-64 flex-col items-stretch border-r border-border bg-sidebar py-8 px-6 transition-all duration-300 z-20 min-h-0">
+    <aside className="z-20 hidden min-h-0 w-64 shrink-0 flex-col items-stretch border-r border-border bg-sidebar px-4 py-6 transition-all duration-300 md:flex md:px-5 md:py-8 lg:px-6">
       {/* Logo */}
       <div className="mb-6 flex justify-start shrink-0">
         <Logo size="md" textClassName="flex" />
@@ -80,8 +80,8 @@ export default function Sidebar() {
               }`
             }
           >
-            <span className="material-symbols-outlined" aria-hidden="true">{item.icon}</span>
-            <span className="text-sm font-medium">{item.label}</span>
+            <span className="material-symbols-outlined shrink-0 text-[22px]" aria-hidden="true">{item.icon}</span>
+            <span className="min-w-0 truncate text-sm font-medium">{item.label}</span>
           </NavLink>
         ))}
       </nav>

@@ -93,7 +93,7 @@ export default function Voice() {
       </main>
 
       {/* Contrôles : dans le flux pour rester au-dessus de la barre mobile fixe */}
-      <footer className="relative z-30 shrink-0 flex flex-col items-center gap-2 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-1 lg:pb-3">
+      <footer className="relative z-30 shrink-0 flex flex-col items-center gap-2 px-3 pb-[calc(var(--app-bottom-nav-height,4.25rem)+env(safe-area-inset-bottom,0px))] pt-1 md:pb-3">
         <div className="flex flex-wrap items-center justify-center gap-2 bg-white/90 backdrop-blur-xl border border-border rounded-full px-2 py-2 shadow-lg max-w-[min(100%,24rem)]">
           <button
             onClick={primaryAction.onClick}

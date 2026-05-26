@@ -1,18 +1,18 @@
 import { NavLink } from 'react-router-dom'
 
 const navItems = [
-  { to: '/', icon: 'home', label: 'Accueil' },
-  { to: '/explorer', icon: 'travel_explore', label: 'Explorer' },
-  { to: '/chat', icon: 'chat_bubble', label: "Tutor'IA" },
-  { to: '/flashcards', icon: 'style', label: 'Flashcards' },
-  { to: '/analytics', icon: 'analytics', label: 'Stats' },
-  { to: '/settings', icon: 'settings', label: 'Réglages' },
+  { to: '/', icon: 'home', label: 'Accueil', shortLabel: 'Accueil' },
+  { to: '/explorer', icon: 'travel_explore', label: 'Explorer', shortLabel: 'Îles' },
+  { to: '/chat', icon: 'chat_bubble', label: "Tutor'IA", shortLabel: 'Tutor' },
+  { to: '/flashcards', icon: 'style', label: 'Flashcards', shortLabel: 'Fiches' },
+  { to: '/analytics', icon: 'analytics', label: 'Stats', shortLabel: 'Stats' },
+  { to: '/settings', icon: 'settings', label: 'Réglages', shortLabel: 'Régl.' },
 ]
 
 export default function BottomNav() {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch overflow-x-auto hide-scrollbar border-t border-border bg-surface/95 backdrop-blur pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] lg:hidden"
+      className="app-bottom-nav fixed inset-x-0 bottom-0 z-50 flex w-full max-w-[100vw] items-stretch border-t border-border bg-surface/95 backdrop-blur md:hidden supports-[backdrop-filter]:bg-surface/90"
       aria-label="Navigation mobile"
     >
       {navItems.map((item) => (
@@ -20,10 +20,11 @@ export default function BottomNav() {
           key={item.to}
           to={item.to}
           end={item.to === '/'}
+          title={item.label}
           className={({ isActive }) =>
-            `flex flex-none flex-col items-center justify-center gap-0.5 py-2 px-2.5 min-w-[4.25rem] max-w-[5.5rem] rounded-lg transition-colors touch-manipulation active:opacity-90 ${
+            `flex min-h-[var(--app-bottom-nav-height)] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 transition-colors touch-manipulation active:opacity-90 ${
               isActive
-                ? 'text-primary bg-primary/10'
+                ? 'bg-primary/10 text-primary'
                 : 'text-text-muted hover:text-primary active:bg-primary/5'
             }`
           }
@@ -31,13 +32,17 @@ export default function BottomNav() {
           {({ isActive }) => (
             <>
               <span
-                className="material-symbols-outlined text-[24px] shrink-0"
+                className="material-symbols-outlined shrink-0 text-[22px] sm:text-[24px]"
                 style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                aria-hidden
               >
                 {item.icon}
               </span>
-              <span className="text-[9px] sm:text-[10px] font-medium leading-tight text-center line-clamp-2 w-full px-0.5">
+              <span className="hidden max-w-full truncate px-0.5 text-[10px] font-medium leading-none min-[380px]:block">
                 {item.label}
+              </span>
+              <span className="max-w-full truncate px-0.5 text-[9px] font-medium leading-none min-[380px]:hidden">
+                {item.shortLabel}
               </span>
             </>
           )}

@@ -6,11 +6,16 @@ import {
   pathToGrid,
   sliceGridForPage,
 } from '../lib/explorer/pathGenerator'
-import { findProgressPageIndex } from '../lib/explorer/decorations'
-import { computeViewportGridMetrics } from '../lib/explorer/viewportGrid'
+import { findProgressCol, findProgressPageIndex } from '../lib/explorer/decorations'
+import {
+  computeStripMetrics,
+  computeViewportGridMetrics,
+} from '../lib/explorer/viewportGrid'
+
 const INITIAL_MODULE_SEEDS = [1, 2, 3]
 const WHEEL_DEBOUNCE_MS = 950
 const EDGE_PAGE_THRESHOLD = 1
+const STRIP_MODE_MQL = '(max-width: 1023px)'
 
 /**
  * @param {{
@@ -22,39 +27,34 @@ const EDGE_PAGE_THRESHOLD = 1
 export function usePathPagination(options = {}) {
   const { nodes = [], getLevelStatus, seed = 1 } = options
   const containerRef = useRef(null)
+  const stripScrollRef = useRef(null)
   const [pageIndex, setPageIndex] = useState(0)
   const [moduleSeeds, setModuleSeeds] = useState(INITIAL_MODULE_SEEDS)
   const [metrics, setMetrics] = useState(() =>
     computeViewportGridMetrics(320, 480)
   )
+  const [isStripMode, setIsStripMode] = useState(false)
+  const [scrollCenterCol, setScrollCenterCol] = useState(0)
+  const [scrollTarget, setScrollTarget] = useState(null)
   const wheelLockRef = useRef(false)
   const touchStartXRef = useRef(0)
   const scrollLockedRef = useRef(false)
   const [pendingPage, setPendingPage] = useState(null)
 
-  const measure = useCallback(() => {
-    const el = containerRef.current
-    if (!el || el.clientWidth <= 0 || el.clientHeight <= 0) return null
-    const next = computeViewportGridMetrics(el.clientWidth, el.clientHeight)
-    setMetrics(next)
-    return next
-  }, [])
-
   useEffect(() => {
-    measure()
-    const el = containerRef.current
-    if (!el || typeof ResizeObserver === 'undefined') return undefined
-    const ro = new ResizeObserver(() => measure())
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [measure])
+    const mql = window.matchMedia(STRIP_MODE_MQL)
+    const update = () => setIsStripMode(mql.matches)
+    update()
+    mql.addEventListener('change', update)
+    return () => mql.removeEventListener('change', update)
+  }, [])
 
   const worldPath = useMemo(() => {
     let path = []
     moduleSeeds.forEach((moduleSeed, index) => {
       const { path: modulePath } = generateModule({
         width: MODULE_WIDTH,
-        height: metrics.rowCount,
+        height: metrics.rowCount || 5,
         seed: moduleSeed + seed * 100,
       })
       path = extendPath(path, modulePath, index * MODULE_WIDTH)
@@ -69,7 +69,7 @@ export function usePathPagination(options = {}) {
 
   const fullGrid = useMemo(
     () =>
-      pathToGrid(worldPath, metrics.rowCount, totalCols, {
+      pathToGrid(worldPath, metrics.rowCount || 5, totalCols, {
         nodes,
         getLevelStatus,
       }),
@@ -88,6 +88,8 @@ export function usePathPagination(options = {}) {
     [fullGrid, metrics.pageCols]
   )
 
+  const progressCol = useMemo(() => findProgressCol(fullGrid), [fullGrid])
+
   const getPageGrid = useCallback(
     (index) => {
       const startCol = index * metrics.pageCols
@@ -99,6 +101,34 @@ export function usePathPagination(options = {}) {
   const setScrollLocked = useCallback((locked) => {
     scrollLockedRef.current = locked
   }, [])
+
+  const measure = useCallback(() => {
+    const el = containerRef.current
+    if (!el || el.clientWidth <= 0 || el.clientHeight <= 0) return null
+
+    const strip = window.matchMedia(STRIP_MODE_MQL).matches
+    if (strip) {
+      const next = computeStripMetrics(el.clientHeight, totalCols)
+      setMetrics(next)
+      return next
+    }
+
+    const next = computeViewportGridMetrics(el.clientWidth, el.clientHeight)
+    setMetrics(next)
+    return next
+  }, [totalCols])
+
+  useEffect(() => {
+    measure()
+  }, [isStripMode, measure, totalCols])
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return undefined
+    const ro = new ResizeObserver(() => measure())
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [measure])
 
   const pagesPerModule = Math.max(1, Math.ceil(MODULE_WIDTH / metrics.pageCols))
 
@@ -144,13 +174,35 @@ export function usePathPagination(options = {}) {
     })
   }, [prependModule])
 
-  const jumpToPage = useCallback((targetPage) => {
-    if (scrollLockedRef.current) return
-    setPendingPage(Math.max(0, targetPage))
-  }, [])
+  const jumpToPage = useCallback(
+    (targetPage) => {
+      if (scrollLockedRef.current) return
+
+      if (isStripMode) {
+        const col = Math.min(progressCol, Math.max(0, targetPage * metrics.pageCols))
+        setScrollTarget({ col, behavior: 'smooth', key: Date.now() })
+        setScrollCenterCol(col)
+        setPageIndex(targetPage)
+        return
+      }
+
+      setPendingPage(Math.max(0, targetPage))
+    },
+    [isStripMode, progressCol, metrics.pageCols]
+  )
+
+  const jumpToProgress = useCallback(() => {
+    if (isStripMode) {
+      setScrollTarget({ col: progressCol, behavior: 'smooth', key: Date.now() })
+      setScrollCenterCol(progressCol)
+      setPageIndex(progressPageIndex)
+      return
+    }
+    jumpToPage(progressPageIndex)
+  }, [isStripMode, progressCol, progressPageIndex, jumpToPage])
 
   useEffect(() => {
-    if (pendingPage === null) return
+    if (pendingPage === null || isStripMode) return
 
     if (pendingPage <= maxPageIndex) {
       setPageIndex(pendingPage)
@@ -159,11 +211,37 @@ export function usePathPagination(options = {}) {
     }
 
     appendModule()
-  }, [pendingPage, maxPageIndex, appendModule])
+  }, [pendingPage, maxPageIndex, appendModule, isStripMode])
+
+  const handleStripScroll = useCallback(() => {
+    const el = stripScrollRef.current
+    if (!el || !metrics.cellSize) return
+
+    const { scrollLeft, clientWidth } = el
+    const centerCol = Math.floor((scrollLeft + clientWidth / 2) / metrics.cellSize)
+    setScrollCenterCol(centerCol)
+    setPageIndex(Math.max(0, Math.min(maxPageIndex, Math.floor(centerCol / metrics.pageCols))))
+
+    const scrollRight = scrollLeft + clientWidth
+    const totalWidth = totalCols * metrics.cellSize
+    if (scrollRight >= totalWidth - clientWidth * 0.35) {
+      appendModule()
+    }
+  }, [metrics.cellSize, metrics.pageCols, totalCols, maxPageIndex, appendModule])
+
+  useEffect(() => {
+    if (!isStripMode) return undefined
+
+    const el = stripScrollRef.current
+    if (!el) return undefined
+
+    handleStripScroll()
+    return undefined
+  }, [isStripMode, metrics.gridWidth, handleStripScroll])
 
   useEffect(() => {
     const el = containerRef.current
-    if (!el) return undefined
+    if (!el || isStripMode) return undefined
 
     const onWheel = (event) => {
       if (scrollLockedRef.current) return
@@ -180,34 +258,52 @@ export function usePathPagination(options = {}) {
 
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
-  }, [goNextPage, goPrevPage])
+  }, [goNextPage, goPrevPage, isStripMode])
 
-  const handleTouchStart = useCallback((e) => {
-    touchStartXRef.current = e.touches[0].clientX
-  }, [])
+  const handleTouchStart = useCallback(
+    (e) => {
+      if (isStripMode) return
+      touchStartXRef.current = e.touches[0].clientX
+    },
+    [isStripMode]
+  )
 
   const handleTouchEnd = useCallback(
     (e) => {
-      if (scrollLockedRef.current) return
+      if (isStripMode || scrollLockedRef.current) return
       const dx = e.changedTouches[0].clientX - touchStartXRef.current
       if (dx < -50) goNextPage()
       else if (dx > 50) goPrevPage()
     },
-    [goNextPage, goPrevPage]
+    [isStripMode, goNextPage, goPrevPage]
   )
 
   const resetToStart = useCallback(() => {
     setPageIndex(0)
     setModuleSeeds(INITIAL_MODULE_SEEDS.map((s, i) => seed + i))
-  }, [seed])
+    if (isStripMode) {
+      setScrollTarget({ col: 0, behavior: 'auto', key: Date.now() })
+      setScrollCenterCol(0)
+    }
+  }, [seed, isStripMode])
+
+  const isAwayFromProgress = isStripMode
+    ? Math.abs(scrollCenterCol - progressCol) > Math.max(2, Math.floor(metrics.pageCols / 2))
+    : pageIndex !== progressPageIndex
 
   return {
     containerRef,
+    stripScrollRef,
     pageIndex,
     pageGrid,
+    fullGrid,
     metrics,
     maxPageIndex,
     progressPageIndex,
+    progressCol,
+    isStripMode,
+    isAwayFromProgress,
+    scrollTarget,
     totalCols,
     getPageGrid,
     setScrollLocked,
@@ -215,9 +311,12 @@ export function usePathPagination(options = {}) {
     goPrevPage,
     goToPage,
     jumpToPage,
+    jumpToProgress,
+    handleStripScroll,
     handleTouchStart,
     handleTouchEnd,
     resetToStart,
     setPageIndex,
+    setScrollTarget,
   }
 }

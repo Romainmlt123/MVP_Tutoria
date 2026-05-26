@@ -17,6 +17,7 @@ export function computeViewportGridMetrics(width, height) {
       gridHeight: VISIBLE_PAGE_ROWS * 64,
       viewportWidth: width,
       viewportHeight: height,
+      isStrip: false,
     }
   }
 
@@ -32,5 +33,24 @@ export function computeViewportGridMetrics(width, height) {
     gridHeight: VISIBLE_PAGE_ROWS * cellSize,
     viewportWidth: width,
     viewportHeight: height,
+    isStrip: false,
+  }
+}
+
+/** Mobile : tuiles à hauteur pleine, parcours scrollable en largeur. */
+export function computeStripMetrics(viewportHeight, totalCols) {
+  const rowCount = VISIBLE_PAGE_ROWS
+  const cellSize = viewportHeight > 0 ? viewportHeight / rowCount : 64
+  const cols = Math.max(1, totalCols)
+
+  return {
+    pageCols: VISIBLE_PAGE_COLS,
+    rowCount,
+    cellSize,
+    gridWidth: cols * cellSize,
+    gridHeight: rowCount * cellSize,
+    viewportWidth: 0,
+    viewportHeight: viewportHeight,
+    isStrip: true,
   }
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import Logo from '../components/Logo'
 import PersonaCard from '../components/PersonaCard'
 import Toggle from '../components/Toggle'
 import { personas } from '../data/mockData'
@@ -59,57 +58,76 @@ export default function Settings() {
   const displayNameLabel = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur'
   const userEmail = user?.email ?? ''
 
+  const navButtonClass = (id) =>
+    `flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition-colors w-full text-left ${
+      activeTab === id
+        ? 'bg-primary/10 font-bold text-primary border border-primary/20'
+        : 'font-medium text-text-secondary hover:bg-slate-50 hover:text-primary'
+    }`
+
   return (
-    <div className="flex h-screen w-full bg-background font-display text-text-primary overflow-hidden">
-      {/* Barre latérale */}
-      <aside className="w-20 lg:w-72 flex-shrink-0 flex flex-col border-r border-border bg-surface transition-all duration-300">
-        <div className="h-20 flex items-center px-6 lg:px-8 border-b border-border">
-          <Link to="/" className="inline-flex">
-            <Logo subtitle="Premium" textClassName="hidden lg:flex" />
-          </Link>
-        </div>
+    <div className="page-shell bg-background font-display text-text-primary">
+      <nav
+        className="flex shrink-0 gap-1 overflow-x-auto hide-scrollbar border-b border-border bg-surface px-2 py-2 lg:hidden"
+        aria-label="Paramètres"
+      >
+        {settingsNav.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setActiveTab(item.id)}
+            className={navButtonClass(item.id)}
+            aria-current={activeTab === item.id ? 'page' : undefined}
+          >
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
 
-        <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-2" aria-label="Paramètres">
-          {settingsNav.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-colors w-full text-left ${
-                activeTab === item.id
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'text-text-secondary hover:bg-slate-50 hover:text-primary'
-              }`}
-              aria-current={activeTab === item.id ? 'page' : undefined}
-            >
-              <span className="material-symbols-outlined text-[24px]" aria-hidden="true">{item.icon}</span>
-              <span className={`hidden lg:block text-sm ${activeTab === item.id ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
-            </button>
-          ))}
-        </nav>
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <aside className="hidden lg:flex lg:w-72 shrink-0 flex-col border-r border-border bg-surface">
+          <div className="border-b border-border px-6 py-5">
+            <h1 className="text-lg font-bold text-text-primary">Paramètres</h1>
+          </div>
 
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50">
-            <div className="relative shrink-0">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt={displayNameLabel} className="h-10 w-10 rounded-full object-cover" />
-              ) : (
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-accent-purple/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-[20px]">person</span>
-                </div>
-              )}
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-white" />
-            </div>
-            <div className="hidden lg:block overflow-hidden min-w-0">
-              <p className="text-sm font-medium text-text-primary truncate">{displayNameLabel}</p>
-              <p className="text-xs text-text-secondary truncate">{userEmail || 'Forfait Étudiant'}</p>
+          <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4" aria-label="Paramètres">
+            {settingsNav.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={navButtonClass(item.id)}
+                aria-current={activeTab === item.id ? 'page' : undefined}
+              >
+                <span className="material-symbols-outlined text-[24px]" aria-hidden="true">{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="border-t border-border p-4">
+            <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-2">
+              <div className="relative shrink-0">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt={displayNameLabel} className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent-purple/20">
+                    <span className="material-symbols-outlined text-[20px] text-primary">person</span>
+                  </div>
+                )}
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-500" />
+              </div>
+              <div className="min-w-0 overflow-hidden">
+                <p className="truncate text-sm font-medium text-text-primary">{displayNameLabel}</p>
+                <p className="truncate text-xs text-text-secondary">{userEmail || 'Forfait Étudiant'}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* Contenu principal */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <div className="flex-1 overflow-y-auto p-6 lg:p-12 scroll-smooth">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="page-scroll p-4 sm:p-6 lg:p-10 scroll-smooth">
           <div className="max-w-4xl mx-auto space-y-10">
             {/* Onglet : Profil */}
             {activeTab === 'profile' && (
@@ -350,9 +368,9 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 w-full bg-surface/90 backdrop-blur-md border-t border-border p-4 lg:px-12 flex justify-between items-center z-10">
-          <button type="button" className="text-text-secondary hover:text-primary text-sm font-medium px-4 py-2 transition-colors">Réinitialiser</button>
-          <div className="flex gap-3">
+        <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-surface/95 p-4 backdrop-blur-md sm:px-6 lg:px-10">
+          <button type="button" className="px-2 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-primary">Réinitialiser</button>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <Link to="/" className="hidden sm:block px-6 py-2.5 rounded-lg border border-border text-text-primary font-medium hover:bg-slate-50 transition-colors text-sm">Annuler</Link>
             <button
               type="button"
@@ -396,8 +414,9 @@ export default function Settings() {
               )}
             </button>
           </div>
-        </div>
-      </main>
+        </footer>
+        </main>
+      </div>
     </div>
   )
 }

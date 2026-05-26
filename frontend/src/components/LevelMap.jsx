@@ -134,6 +134,7 @@ function SideStrip({ grid, cellSize, widthPx, side, decorationSeed, pageStartCol
  *   onPrevPage?: () => void,
  *   onNextPage?: () => void,
  *   showNavHints?: boolean,
+ *   variant?: 'page' | 'strip',
  * }} props
  */
 export default function LevelMap({
@@ -148,9 +149,11 @@ export default function LevelMap({
   onPrevPage,
   onNextPage,
   showNavHints = true,
+  variant = 'page',
 }) {
   const containerRef = useRef(null)
   const [sidePadPx, setSidePadPx] = useState(0)
+  const isStrip = variant === 'strip'
 
   const rowCount = grid?.length ?? 0
   const colCount = grid?.[0]?.length ?? 0
@@ -159,6 +162,11 @@ export default function LevelMap({
   const height = gridHeight ?? rowCount * cellSize
 
   useEffect(() => {
+    if (isStrip) {
+      setSidePadPx(0)
+      return undefined
+    }
+
     const el = containerRef.current
     if (!el) return undefined
 
@@ -169,18 +177,22 @@ export default function LevelMap({
     const ro = new ResizeObserver(update)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [width])
+  }, [width, isStrip])
 
   if (!grid?.length || !grid[0]?.length) return null
 
   return (
     <div
       ref={containerRef}
-      className="relative flex h-full w-full items-center justify-center overflow-hidden bg-[#70ad42]"
+      className={`relative flex h-full bg-[#70ad42] ${
+        isStrip
+          ? 'min-h-full w-full items-stretch justify-start overflow-visible'
+          : 'w-full items-center justify-center overflow-hidden'
+      }`}
       role="region"
       aria-label="Parcours de niveaux"
     >
-      {showNavHints && (
+      {showNavHints && !isStrip && (
         <>
           <button
             type="button"
@@ -201,16 +213,18 @@ export default function LevelMap({
         </>
       )}
 
-      <div className="relative z-10 flex shrink-0 items-stretch">
-        <SideStrip
-          grid={grid}
-          cellSize={cellSize}
-          widthPx={sidePadPx}
-          side="left"
-          decorationSeed={decorationSeed}
-          pageStartCol={pageStartCol}
-          pageCols={colCount}
-        />
+      <div className={`relative z-10 flex shrink-0 items-stretch ${isStrip ? 'h-full' : ''}`}>
+        {!isStrip && (
+          <SideStrip
+            grid={grid}
+            cellSize={cellSize}
+            widthPx={sidePadPx}
+            side="left"
+            decorationSeed={decorationSeed}
+            pageStartCol={pageStartCol}
+            pageCols={colCount}
+          />
+        )}
 
         <div
           role="grid"
@@ -229,7 +243,7 @@ export default function LevelMap({
             row.map((cell) => {
               const isStartCell = rowIndex === centerRow && cell.col === 0
               const isEndCell = rowIndex === centerRow && cell.col === colCount - 1
-              const worldCol = cell.worldCol ?? pageStartCol + cell.col
+              const worldCol = isStrip ? cell.col : (cell.worldCol ?? pageStartCol + cell.col)
 
               if (!cell.isLevel) {
                 return (
@@ -298,15 +312,17 @@ export default function LevelMap({
           )}
         </div>
 
-        <SideStrip
-          grid={grid}
-          cellSize={cellSize}
-          widthPx={sidePadPx}
-          side="right"
-          decorationSeed={decorationSeed}
-          pageStartCol={pageStartCol}
-          pageCols={colCount}
-        />
+        {!isStrip && (
+          <SideStrip
+            grid={grid}
+            cellSize={cellSize}
+            widthPx={sidePadPx}
+            side="right"
+            decorationSeed={decorationSeed}
+            pageStartCol={pageStartCol}
+            pageCols={colCount}
+          />
+        )}
       </div>
     </div>
   )

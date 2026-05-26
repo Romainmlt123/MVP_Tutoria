@@ -290,7 +290,7 @@ export default function Onboarding() {
                 Sélectionne tout ce qui te correspond. Plusieurs réponses possibles.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {LEARNING_OPTIONS.map((option) => (
                 <button
                   key={option.id}

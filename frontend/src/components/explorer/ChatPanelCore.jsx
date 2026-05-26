@@ -29,7 +29,7 @@ export default function ChatPanelCore({
         ref={scrollRef}
         className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 scroll-smooth overscroll-y-contain"
       >
-        <div className="mx-auto flex max-w-3xl flex-col gap-6 pb-36 sm:pb-40 lg:pb-36">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6 pb-[calc(var(--app-bottom-nav-height,4.25rem)+5rem)] md:pb-28 lg:pb-36">
           {error && (
             <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               <span className="material-symbols-outlined text-[20px]">error</span>
